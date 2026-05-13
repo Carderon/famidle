@@ -3,16 +3,16 @@
     <!-- Composant pour le fond d'écran et les animations -->
     <Cinematics />
 
-    <div class="relative grid grid-cols-12 w-full min-h-full dark:bg-gray-800 bg-white">
+    <div class="relative grid grid-cols-12 w-full min-h-full dark:bg-gray-800 bg-white overflow-hidden">
       <!-- Gauche : Ressources et jauges -->
-      <aside class="col-span-2 min-h-full border-gray-300 dark:border-gray-600"
+      <aside class="col-span-3 xl:col-span-2 min-h-full border-gray-300 dark:border-gray-600"
         :class="{ 'border-r bg-gray-50 dark:bg-gray-900/40': isGaugesShown || isResourcesShown }">
         <GaugeList />
         <ResourceList />
       </aside>
 
       <!-- Centre : Activités et feu de camp -->
-      <main class="p-6 flex flex-col col-span-8 h-screen">
+      <main class="p-6 flex flex-col col-span-9 xl:col-span-8 h-screen">
         <div class="fixed bottom-0 left-0">
           <transition name="fade">
             <span v-if="elapsed >= 1" class="text-black dark:text-white">{{ Math.floor(elapsed) }}</span>
@@ -36,11 +36,13 @@
 
         <MonumentPanel v-show="activeTab === 'monument'" monumentId="age1.building.house-1" />
 
+        <LogList v-show="activeTab === 'logs'" />
+
         <Badge v-show="isBadgesShown" />
       </main>
 
       <!-- Droite : Journaux -->
-      <aside class="col-span-2 h-screen">
+      <aside class="col-span-2 h-screen hidden xl:block">
         <LogList />
       </aside>
     </div>
@@ -52,7 +54,6 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, watchEffect, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useRouter } from 'vue-router';
 
 import ResourceList from '@/components/ResourceList.vue';
 import LogList from '@/components/LogList.vue';
@@ -71,7 +72,7 @@ import { useClockStore } from '@/stores/clockStore';
 import { useGameStateStore } from '@/stores/gameStateStore';
 import { useImprovementStore } from '@/stores/improvementStore';
 
-const router = useRouter();
+defineOptions({ name: 'GameView' })
 
 const characterStore = useCharacterStore();
 const improvementStore = useImprovementStore();
@@ -95,16 +96,19 @@ const isMonumentShown = computed(() => gameState.getFlag('ui.flag.monumentShown'
 const isCharacterShown = computed(() => gameState.getFlag('ui.flag.characterShown'));
 const isGaugesShown = computed(() => gameState.getFlag('ui.flag.gaugesShown'));
 const isResourcesShown = computed(() => gameState.getFlag('ui.flag.resourcesShown'));
+const isLogsShown = computed(() => gameState.getFlag('ui.flag.logsShown'));
 
-type CenterTabId = 'character' | 'activities' | 'improvements' | 'monument'
+type CenterTabId = 'character' | 'activities' | 'improvements' | 'monument' | 'logs'
 type TabDef = { id: CenterTabId; label: string }
 
 const tabs = computed<TabDef[]>(() => {
   const list: TabDef[] = []
+  console.warn(window.innerWidth);
   if (isActivityShown.value) list.push({ id: 'activities', label: 'Activités' })
   if (isImprovementsShown.value) list.push({ id: 'improvements', label: 'Améliorations' })
   if (isMonumentShown.value) list.push({ id: 'monument', label: 'Monument' })
   if (isCharacterShown.value) list.push({ id: 'character', label: 'Personnage' })
+  if (window.innerWidth <= 1280 && isLogsShown.value) list.push({ id: 'logs', label: 'Logs' })
   return list
 })
 
@@ -117,8 +121,11 @@ watchEffect(() => {
 })
 
 onBeforeMount(() => {
-  if (!characterStore.getActiveCharacter()) {
-    router.push({ name: 'home' });
+  // Pas de menu départ : premier lancement = personnage provisoire (classe choisie plus tard).
+  if (characterStore.characters.length === 0) {
+    characterStore.addCharacter('unset')
+  } else if (!characterStore.getActiveCharacter()) {
+    characterStore.activeCharacterIndex = 0
   }
 });
 

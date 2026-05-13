@@ -1,18 +1,16 @@
 <template>
-  <transition name="fade">
-    <div v-show="isLogsShown" class="relative p-6 h-full flex-1">
-      <div
-        class="absolute top-0 left-0 h-full w-full bg-gradient-to-b pointer-events-none from-transparent to-white dark:to-gray-800 from-0% to-70%">
+  <div class="relative h-full xl:p-6 xl:flex-1 xl:w-full">
+    <div
+      class="absolute top-0 left-0 h-full w-full bg-gradient-to-b pointer-events-none from-transparent to-white dark:to-gray-800 from-0% to-70% hidden xl:block">
 
-      </div>
-      <h2 class="text-xl font-bold hidden">Logs</h2>
-      <ul class="dark:text-white text-black flex flex-col gap-6">
-        <li v-for="(log, index) in displayedLogs" :key="logs.length - 1 - index">
-          {{ log }}
-        </li>
-      </ul>
     </div>
-  </transition>
+    <h2 class="text-xl font-bold hidden">Logs</h2>
+    <ul class="dark:text-white text-black flex flex-col gap-6">
+      <li v-for="(log, index) in displayedLogs" :key="logs.length - 1 - index">
+        {{ log }}
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script setup lang="ts">

@@ -5,6 +5,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'BadgeView' })
+
 import { computed } from 'vue';
 import { useCharacterStore } from '@/stores/characterStore.ts'
 

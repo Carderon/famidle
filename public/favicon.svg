@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Famidle">
+  <ellipse cx="16" cy="13.5" rx="7" ry="10" fill="#ea580c"/>
+  <ellipse cx="16" cy="15.5" rx="4.5" ry="7.5" fill="#fb923c"/>
+  <ellipse cx="16" cy="17.5" rx="2.4" ry="4.8" fill="#fde68a"/>
+  <path fill="#92400e" d="M9 22h14v2H9z" opacity=".9"/>
+  <rect x="9" y="23.8" width="14" height="3.2" rx="1.1" fill="#78350f"/>
+</svg>

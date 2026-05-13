@@ -50,7 +50,7 @@
           </div>
 
           <GameTooltip placement="above">
-            <p class="text-sm font-semibold text-black dark:text-white">{{ tile.displayName ?? tile.id }}</p>
+            <p class="text-sm font-semibold text-white">{{ tile.displayName ?? tile.id }}</p>
             <template v-if="tile.state !== 'ready'">
               <p v-if="hasCost(tile)" class="mt-1 text-[11px]">
                 Coût :

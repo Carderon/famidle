@@ -24,16 +24,16 @@
               </span>
             </template>
 
-            <!-- Réparation : couleur en dessous, calque gris qui remonte (révélation) -->
+            <!-- Réparation : fondu entre image cassée et image réparée -->
             <template v-else-if="isRepairing(tile.id)">
-              <div class="absolute inset-0 overflow-hidden">
-                <div class="absolute inset-0 bg-cover bg-center"
-                  :style="{ backgroundImage: `url(${tile.backgrounds.ready})` }" />
-                <div class="absolute inset-0 bg-cover bg-center will-change-transform grayscale"
-                  :style="repairRevealStyle(tile)" />
+              <div class="absolute inset-0">
+                <div class="absolute inset-0 bg-cover bg-center will-change-opacity"
+                  :style="repairBlendReadyStyle(tile)" />
+                <div class="absolute inset-0 bg-cover bg-center will-change-opacity"
+                  :style="repairBlendBrokenStyle(tile)" />
               </div>
               <span
-                class="relative z-[2] flex h-full items-center justify-center text-[10px] font-medium tabular-nums text-black dark:text-white drop-shadow">
+                class="relative z-[2] flex h-full items-center justify-center text-[10px] font-medium tabular-nums  text-white drop-shadow">
                 {{ Math.round(repairProgressPct(tile.id)) }}%
               </span>
             </template>
@@ -115,13 +115,22 @@ function repairProgressPct(tileId: string): number {
   return worldStore.getTileRepairProgress01(tileId) * 100
 }
 
-/** Calque gris identique à l’image « ready », remonté pour révéler la couleur en dessous. */
-function repairRevealStyle(tile: Tile) {
+/** Fondu : ready apparaît avec p, cassé disparaît avec (1 − p). */
+function repairBlendReadyStyle(tile: Tile) {
   void tick.value
   const p = worldStore.getTileRepairProgress01(tile.id)
   return {
     backgroundImage: `url(${tile.backgrounds.ready})`,
-    transform: `translateY(-${p * 100}%)`,
+    opacity: p,
+  }
+}
+
+function repairBlendBrokenStyle(tile: Tile) {
+  void tick.value
+  const p = worldStore.getTileRepairProgress01(tile.id)
+  return {
+    backgroundImage: `url(${tile.backgrounds.broken})`,
+    opacity: 1 - p,
   }
 }
 

@@ -1,5 +1,9 @@
-# Site projet : https://carderon.github.io/famidle/
-# Réglages dépôt : Settings → Pages → Source : GitHub Actions
+# https://carderon.github.io/famidle/
+#
+# IMPORTANT (sinon erreur 404 sur deploy-pages) :
+# Settings → Pages → Build and deployment → Source = « GitHub Actions »
+# (Pas « Déployer depuis une branche » ni « Aucune source ».)
+#
 name: Deploy to GitHub Pages
 
 on:
@@ -7,6 +11,7 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,20 +30,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: '22'
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Install and build
-        run: |
-          npm ci
-          npm run build-only
+      - run: npm ci
+      - run: npm run build
 
-      - name: SPA fallback for client routes
-        run: cp dist/index.html dist/404.html
-
-      - name: Disable Jekyll (static assets as published)
-        run: touch dist/.nojekyll
+      # Rafraîchir /famidle/play : GitHub sert 404.html sur les URLs inconnues
+      - run: cp dist/index.html dist/404.html
+      - run: touch dist/.nojekyll
 
       - uses: actions/upload-pages-artifact@v3
         with:

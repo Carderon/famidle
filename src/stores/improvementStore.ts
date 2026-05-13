@@ -183,6 +183,8 @@ export const useImprovementStore = defineStore('improvements', () => {
 
   return {
     improvements,
+    gameTimeSim,
+    pendingBuildCompleteAt,
     applyGameTime,
     scheduleBuild,
     isPendingBuild,

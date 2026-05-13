@@ -1,5 +1,8 @@
 import './assets/scss/index.scss'
 
+import { initThemeFromStorage } from '@/utils/theme'
+initThemeFromStorage()
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 

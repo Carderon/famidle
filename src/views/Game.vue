@@ -48,6 +48,8 @@
     </div>
 
     <EventPanel />
+
+    <SettingsMenu />
   </div>
 </template>
 
@@ -65,6 +67,9 @@ import Badge from "@/components/Badge.vue";
 import EventPanel from '@/components/EventPanel.vue';
 import MonumentPanel from '@/components/world/MonumentPanel.vue';
 import CharacterPanel from '@/components/CharacterPanel.vue';
+import SettingsMenu from '@/components/SettingsMenu.vue';
+
+import { applyGameSnapshot, loadSnapshotFromStorage } from '@/gamePersistence';
 
 import { useActivityStore } from '@/stores/activityStore';
 import { useCharacterStore } from '@/stores/characterStore';
@@ -103,7 +108,6 @@ type TabDef = { id: CenterTabId; label: string }
 
 const tabs = computed<TabDef[]>(() => {
   const list: TabDef[] = []
-  console.warn(window.innerWidth);
   if (isActivityShown.value) list.push({ id: 'activities', label: 'Activités' })
   if (isImprovementsShown.value) list.push({ id: 'improvements', label: 'Améliorations' })
   if (isMonumentShown.value) list.push({ id: 'monument', label: 'Monument' })
@@ -132,7 +136,14 @@ onBeforeMount(() => {
 onMounted(() => {
   improvementStore.initializeImprovements();
   activityStore.initializeActivities();
-  clockStore.start();
+  const snapshot = loadSnapshotFromStorage();
+  if (snapshot) {
+    applyGameSnapshot(snapshot);
+    clockStore.start({ skipGameStateReset: true, skipClearScheduled: true });
+    clockStore.syncSimulationElapsed(snapshot.elapsed);
+  } else {
+    clockStore.start();
+  }
 });
 
 onBeforeUnmount(() => {

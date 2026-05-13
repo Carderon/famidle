@@ -13,6 +13,8 @@ export interface EventsSystemDeps extends EventEngineDeps {
   getEra: () => number
   /** Queue an interactive event so the player can pick one choice. */
   enqueueEvent: (event: EventType) => void
+  /** IDs des événements `once` déjà déclenchés cette partie (persistés avec la sauvegarde). */
+  onceFiredEventIds: Set<string>
 }
 
 /**
@@ -26,8 +28,9 @@ export interface EventsSystemDeps extends EventEngineDeps {
  *    - interactive event (`choices`): apply entry effects, then enqueue it
  *
  * Anti-spam:
- * - `once` events (default) fire at most once per session, tracked in a `Set`
- * - the set is cleared on `onStart` so a fresh `clock.start()` resets state
+ * - `once` events (default) fire at most once per session, tracked in `deps.onceFiredEventIds`
+ * - ce Set est vidé uniquement lors d’un **nouveau départ** (`clock.start()` sans chargement),
+ *   pas au démarrage du moteur après restore sauvegarde
  *
  * Note: effects run in declaration order. Effects that mutate flags/counters
  * (e.g. `setFlag`) become visible to subsequent eligibility checks within the
@@ -36,14 +39,10 @@ export interface EventsSystemDeps extends EventEngineDeps {
  * can immediately unblock another event that watches that flag.
  */
 export function createEventsSystem(deps: EventsSystemDeps): TickSystem {
-  const triggered = new Set<string>()
+  const triggered = deps.onceFiredEventIds
 
   return {
     id: 'events',
-
-    onStart() {
-      triggered.clear()
-    },
 
     onTick(ctx) {
       const era = deps.getEra()

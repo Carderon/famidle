@@ -16,12 +16,8 @@
           <div class="absolute inset-0 overflow-hidden" :class="tileVisualHoverClass(tile)">
             <!-- État cassé (pas de chantier en cours) -->
             <template v-if="tile.state !== 'ready' && !isRepairing(tile.id)">
-              <div class="absolute inset-0 bg-cover bg-center"
+              <div class="absolute inset-0 bg-cover bg-center hover:brightness-125 transition-all duration-100"
                 :style="{ backgroundImage: `url(${tile.backgrounds.broken})` }" />
-              <span
-                class="relative z-[2] flex h-full items-center justify-center text-lg text-black dark:text-white drop-shadow">
-                ✗
-              </span>
             </template>
 
             <!-- Réparation : fondu entre image cassée et image réparée -->
@@ -42,10 +38,6 @@
             <template v-else>
               <div class="absolute inset-0 bg-cover bg-center"
                 :style="{ backgroundImage: `url(${tile.backgrounds.ready})` }" />
-              <span
-                class="relative z-[2] flex h-full items-center justify-center text-lg text-black dark:text-white drop-shadow">
-                ✓
-              </span>
             </template>
           </div>
 

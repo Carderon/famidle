@@ -71,6 +71,11 @@ export class ClockEngine {
     this.speed = speed
   }
 
+  /** Temps sim cumulé (chargement de sauvegarde — sans rejouer les ticks passés). */
+  setElapsedSim(seconds: number): void {
+    this.elapsed = Math.max(0, seconds)
+  }
+
   /**
    * Start the clock:
    * - resets counters

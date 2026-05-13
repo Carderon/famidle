@@ -138,6 +138,8 @@ export const useActivityStore = defineStore('activities', () => {
 
   return {
     activities,
+    gameTimeSim,
+    cooldownUntilSim,
     applyGameTime,
     initializeActivities,
     resetCooldowns,

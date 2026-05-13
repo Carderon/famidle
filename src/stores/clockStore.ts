@@ -54,6 +54,9 @@ export const useClockStore = defineStore('clock', () => {
   const improvementStore = useImprovementStore()
   const worldStore = useWorldStore()
 
+  /** Événements `once` déjà tirés (voir `eventsSystem`). Ne pas vider au restart moteur après chargement sauvegarde. */
+  const onceFiredEventIds = new Set<string>()
+
   // ---------------------------------------------------------------------------
   // Systèmes enregistrés sur le moteur
   //
@@ -87,6 +90,7 @@ export const useClockStore = defineStore('clock', () => {
     spendGauge: (slug, qty) => gaugeStore.trySpendGauge(slug, qty),
     addGauge: (slug, amt) => gaugeStore.addGauge(slug, amt),
     enqueueEvent: (event) => eventStore.enqueueEvent(event),
+    onceFiredEventIds,
   })
 
   const resourcesSystem = createResourcesSystem({
@@ -119,14 +123,29 @@ export const useClockStore = defineStore('clock', () => {
     worldStore.applyGameTime(0)
   }
 
-  function start(): void {
+  function start(options?: { skipGameStateReset?: boolean; skipClearScheduled?: boolean }): void {
     if (isRunning.value) return
-    gameStateStore.reset()
-    eventStore.clear()
-    clearScheduledSimActions()
+    if (!options?.skipGameStateReset) {
+      gameStateStore.reset()
+      eventStore.clear()
+      onceFiredEventIds.clear()
+    }
+    if (!options?.skipClearScheduled) {
+      clearScheduledSimActions()
+    }
     engine.start()
     isRunning.value = true
     isPaused.value = false
+  }
+
+  /** Après chargement d’une sauvegarde : aligne le moteur et les stores sur le même temps sim. */
+  function syncSimulationElapsed(seconds: number): void {
+    const s = Math.max(0, seconds)
+    engine.setElapsedSim(s)
+    elapsed.value = s
+    improvementStore.applyGameTime(s)
+    activityStore.applyGameTime(s)
+    worldStore.applyGameTime(s)
   }
 
   function stop(): void {
@@ -156,6 +175,15 @@ export const useClockStore = defineStore('clock', () => {
     engine.setSpeed(speed)
   }
 
+  function getOnceFiredEventIdsSnapshot(): string[] {
+    return [...onceFiredEventIds]
+  }
+
+  function restoreOnceFiredEventIds(ids: readonly string[]): void {
+    onceFiredEventIds.clear()
+    for (const id of ids) onceFiredEventIds.add(id)
+  }
+
   return {
     elapsed,
     tick,
@@ -166,5 +194,8 @@ export const useClockStore = defineStore('clock', () => {
     pause,
     resume,
     setSpeed,
+    syncSimulationElapsed,
+    getOnceFiredEventIdsSnapshot,
+    restoreOnceFiredEventIds,
   }
 })

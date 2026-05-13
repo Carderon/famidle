@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center justify-center">
-    <img :src="badgeImage" :alt="`Era Badge`" class="h-[200px] w-[200px]" />
+    <img :src="badgeImage" :alt="`Era Badge`" class="h-[100px] w-[100px]" />
   </div>
 </template>
 

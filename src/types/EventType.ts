@@ -41,6 +41,8 @@ export type EventEffect =
   | { kind: 'spendResource'; resourceSlug: string; amount: number }
   /** Ajoute (soigne) une jauge : montant positif, plafonné au max de la jauge. */
   | { kind: 'addGauge'; gaugeSlug: string; amount: number }
+  /** Passe le personnage actif à l’ère indiquée (1, 2, …). */
+  | { kind: 'setEra'; era: number }
 
 /** Coût payé en jauges (débit au moment du choix). */
 export type GaugeCostBag = Readonly<{ gaugeSlug: string; quantity: number }[]>

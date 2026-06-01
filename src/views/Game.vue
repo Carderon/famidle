@@ -28,15 +28,19 @@
           </button>
         </nav>
 
+        <JournalPanel v-show="activeTab === 'journal'" />
+
         <CharacterPanel v-show="activeTab === 'character'" />
 
         <ActivityList v-show="activeTab === 'activities'" />
 
         <ImprovementList v-show="activeTab === 'improvements'" />
 
-        <MonumentPanel v-show="activeTab === 'monument'" monumentId="age1.building.house-1" />
+        <MonumentPanel v-show="activeTab === 'monument'" :monument-id="activeMonumentId" />
 
-        <LogList v-show="activeTab === 'logs'" />
+        <BuildingList v-show="activeTab === 'buildings'" />
+
+        <LogList v-show="activeTab === 'logs'" show-legend />
 
         <Badge v-show="isBadgesShown" />
       </main>
@@ -65,21 +69,30 @@ import ActivityList from '@/components/ActivityList.vue';
 import Cinematics from "@/components/Cinematics.vue";
 import Badge from "@/components/Badge.vue";
 import EventPanel from '@/components/EventPanel.vue';
-import MonumentPanel from '@/components/world/MonumentPanel.vue';
+import MonumentPanel from '@/components/monuments/MonumentPanel.vue';
+import BuildingList from '@/components/BuildingList.vue';
 import CharacterPanel from '@/components/CharacterPanel.vue';
+import JournalPanel from '@/components/JournalPanel.vue';
 import SettingsMenu from '@/components/SettingsMenu.vue';
 
-import { applyGameSnapshot, loadSnapshotFromStorage } from '@/gamePersistence';
+import { applyGameSnapshot, loadSnapshotFromStorage } from '@/persistence/gamePersistence';
 
 import { useActivityStore } from '@/stores/activityStore';
 import { useCharacterStore } from '@/stores/characterStore';
 import { useClockStore } from '@/stores/clockStore';
 import { useGameStateStore } from '@/stores/gameStateStore';
 import { useImprovementStore } from '@/stores/improvementStore';
+import { useMonumentStore } from '@/stores/monumentStore';
 
 defineOptions({ name: 'GameView' })
 
 const characterStore = useCharacterStore();
+const monumentStore = useMonumentStore();
+
+const activeMonumentId = computed(() => {
+  const era = characterStore.getActiveCharacter()?.era ?? 1
+  return monumentStore.getMonumentIdForEra(era)
+})
 const improvementStore = useImprovementStore();
 const activityStore = useActivityStore();
 
@@ -98,12 +111,14 @@ const isBadgesShown = computed(() => gameState.getFlag('ui.flag.badgesShown'));
 const isImprovementsShown = computed(() => gameState.getFlag('ui.flag.improvementsShown'));
 const isActivityShown = computed(() => gameState.getFlag('ui.flag.activityShown'));
 const isMonumentShown = computed(() => gameState.getFlag('ui.flag.monumentShown'));
+const isBuildingShown = computed(() => gameState.getFlag('ui.flag.buildingShown'));
 const isCharacterShown = computed(() => gameState.getFlag('ui.flag.characterShown'));
 const isGaugesShown = computed(() => gameState.getFlag('ui.flag.gaugesShown'));
 const isResourcesShown = computed(() => gameState.getFlag('ui.flag.resourcesShown'));
 const isLogsShown = computed(() => gameState.getFlag('ui.flag.logsShown'));
+const isJournalShown = computed(() => gameState.getFlag('ui.flag.journalShown'));
 
-type CenterTabId = 'character' | 'activities' | 'improvements' | 'monument' | 'logs'
+type CenterTabId = 'journal' | 'character' | 'activities' | 'improvements' | 'monument' | 'buildings' | 'logs'
 type TabDef = { id: CenterTabId; label: string }
 
 const tabs = computed<TabDef[]>(() => {
@@ -111,17 +126,19 @@ const tabs = computed<TabDef[]>(() => {
   if (isActivityShown.value) list.push({ id: 'activities', label: 'Activités' })
   if (isImprovementsShown.value) list.push({ id: 'improvements', label: 'Améliorations' })
   if (isMonumentShown.value) list.push({ id: 'monument', label: 'Monument' })
+  if (isBuildingShown.value) list.push({ id: 'buildings', label: 'Bâtiments' })
   if (isCharacterShown.value) list.push({ id: 'character', label: 'Personnage' })
+  if (isJournalShown.value) list.push({ id: 'journal', label: 'Journal' })
   if (window.innerWidth <= 1280 && isLogsShown.value) list.push({ id: 'logs', label: 'Logs' })
   return list
 })
 
-const activeTab = ref<CenterTabId>('improvements')
+const activeTab = ref<CenterTabId>('activities')
 
 watchEffect(() => {
   // Keep the active tab valid when the UI unlocks/locks tabs.
   if (tabs.value.some((t) => t.id === activeTab.value)) return
-  activeTab.value = tabs.value[0]?.id ?? 'improvements'
+  activeTab.value = tabs.value[0]?.id ?? 'activities'
 })
 
 onBeforeMount(() => {
@@ -134,14 +151,14 @@ onBeforeMount(() => {
 });
 
 onMounted(() => {
-  improvementStore.initializeImprovements();
-  activityStore.initializeActivities();
   const snapshot = loadSnapshotFromStorage();
   if (snapshot) {
     applyGameSnapshot(snapshot);
     clockStore.start({ skipGameStateReset: true, skipClearScheduled: true });
     clockStore.syncSimulationElapsed(snapshot.elapsed);
   } else {
+    improvementStore.initializeImprovements();
+    activityStore.initializeActivities();
     clockStore.start();
   }
 });

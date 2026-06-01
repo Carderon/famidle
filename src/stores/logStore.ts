@@ -1,25 +1,36 @@
-// src/stores/logStore.ts
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { normalizeLogs } from '@/persistence/logNormalize'
+import { useClockStore } from '@/stores/clockStore'
+import { createLogEntry } from '@/utils/logEntries'
+import type { GameLogEntry, LogKind } from '@/types/LogType'
+
+const MAX_LOGS = 120
 
 export const useLogStore = defineStore('log', () => {
-  const logs = ref<string[]>([]);
+  const logs = ref<GameLogEntry[]>([])
 
-  const addLog = (message: string) => {
-    logs.value.push(`${message}`);
-    // Limite le nombre de logs affichés à 100 pour éviter la surcharge
-    if (logs.value.length > 100) {
-      logs.value.shift();
+  function addLog(message: string, kind: LogKind = 'gameplay') {
+    const simAt = useClockStore().elapsed
+    logs.value.push(createLogEntry(message, kind, simAt))
+    if (logs.value.length > MAX_LOGS) {
+      logs.value.shift()
     }
-  };
+  }
 
-  const initializeLogs = () => {
-    return [];
-  };
+  function initializeLogs() {
+    logs.value = []
+  }
+
+  /** Hydrate depuis sauvegarde (y compris anciens `string[]`). */
+  function hydrateLogs(saved: unknown) {
+    logs.value = normalizeLogs(saved)
+  }
 
   return {
     logs,
     addLog,
-    initializeLogs
-  };
-});
+    initializeLogs,
+    hydrateLogs,
+  }
+})

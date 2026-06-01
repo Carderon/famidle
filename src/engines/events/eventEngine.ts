@@ -1,5 +1,6 @@
 import type { EventChoice, EventEffect, EventType } from '@/types/EventType'
 import type { ResourceCostBag } from '@/types/ResourceType'
+import type { AddLogFn } from '@/types/LogType'
 import type { TickContext } from '@/types/TickType'
 
 /**
@@ -12,7 +13,7 @@ import type { TickContext } from '@/types/TickType'
  * - mutators do exactly what they say (no implicit side-effects)
  */
 export interface EventEngineDeps {
-  addLog: (message: string) => void
+  addLog: AddLogFn
   getFlag: (flag: string) => boolean
   setFlag: (flag: string, value?: boolean) => void
   getCounter: (counter: string) => number
@@ -23,6 +24,7 @@ export interface EventEngineDeps {
   getGaugeQuantity: (gaugeSlug: string) => number
   spendGauge: (gaugeSlug: string, quantity: number) => boolean
   addGauge: (gaugeSlug: string, amount: number) => void
+  setEra: (era: number) => void
 }
 
 /**
@@ -78,7 +80,7 @@ export function applyEffects(
   for (const effect of effects) {
     switch (effect.kind) {
       case 'log':
-        deps.addLog(effect.message)
+        deps.addLog(effect.message, 'lore')
         break
       case 'setFlag':
         deps.setFlag(effect.flag, effect.value ?? true)
@@ -98,6 +100,9 @@ export function applyEffects(
         break
       case 'addGauge':
         deps.addGauge(effect.gaugeSlug, effect.amount)
+        break
+      case 'setEra':
+        deps.setEra(effect.era)
         break
     }
   }

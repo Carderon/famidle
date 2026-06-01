@@ -6,11 +6,17 @@ import { useGameStateStore } from '@/stores/gameStateStore'
 import { useActivityStore } from '@/stores/activityStore'
 import { useLogStore } from '@/stores/logStore'
 import type { ImprovementType } from '@/types/ImprovementType.ts'
+import {
+  IMPROVEMENT_CATEGORY_LABELS,
+  IMPROVEMENT_CATEGORY_ORDER,
+  type ImprovementCategory,
+} from '@/types/ImprovementType.ts'
 import { improvementsData } from '@/data/improvements'
 import {
   applyEffects,
   canAffordImprovement,
   getResourceRateBonus,
+  getResourceMaxBonus,
   meetsConditions,
   spendImprovementCosts,
   type ImprovementEngineDeps,
@@ -103,14 +109,20 @@ export const useImprovementStore = defineStore('improvements', () => {
     const resourceStore = useResourceStore()
     const gameState = useGameStateStore()
     const logStore = useLogStore()
+    const activityStore = useActivityStore()
 
     return {
-      addLog: (message) => logStore.addLog(message),
+      addLog: (message, kind) => logStore.addLog(message, kind),
       setFlag: (flag, value) => gameState.setFlag(flag, value),
+      getFlag: (flag) => gameState.getFlag(flag),
       incrementCounter: (counter, by) => gameState.incrementCounter(counter, by),
       addResource: (slug, amount) => resourceStore.addResource(slug, amount),
       spendResource: (costs) => resourceStore.spendResource(costs),
-
+      setEra: (era) => {
+        characterStore.setEra(era)
+        activityStore.cancelActiveTimedAndRefund()
+        activityStore.updateActivityVisibility()
+      },
       getCharacterClass: () => characterStore.getActiveCharacter()?.classType,
       getCharacterSpecialization: () => characterStore.getActiveCharacter()?.specialization,
       getCharacterLevel: () => characterStore.getActiveCharacter()?.level,
@@ -141,7 +153,10 @@ export const useImprovementStore = defineStore('improvements', () => {
 
     improvement.isBought = true
     applyEffects(improvement.effects, deps)
-    useResourceStore().getResourceRates()
+    const resourceStore = useResourceStore()
+    resourceStore.getResourceRates()
+    resourceStore.recomputeResourceCaps()
+    resourceStore.recomputeVisibility()
     useActivityStore().updateActivityVisibility()
     return true
   }
@@ -173,12 +188,46 @@ export const useImprovementStore = defineStore('improvements', () => {
     return getResourceRateBonus(improvements.value, resourceSlug)
   }
 
+  function getResourceMaxImprovementBonus(resourceSlug: string): number {
+    return getResourceMaxBonus(improvements.value, resourceSlug)
+  }
+
   function initializeImprovements() {
     updateImprovementVisibility()
   }
 
   function getImprovement(slug: string): ImprovementType | undefined {
     return improvements.value.find((i) => i.slug === slug)
+  }
+
+  function sortImprovementsInCategory(list: ImprovementType[]): ImprovementType[] {
+    return [...list].sort(
+      (a, b) =>
+        (a.sortOrder ?? 999) - (b.sortOrder ?? 999) ||
+        a.name.localeCompare(b.name, 'fr'),
+    )
+  }
+
+  /** Améliorations visibles et non achetées, regroupées par catégorie. */
+  function visibleImprovementsByCategory(): {
+    category: ImprovementCategory
+    label: string
+    improvements: ImprovementType[]
+  }[] {
+    const visible = improvements.value.filter((i) => i.isVisible && !i.isBought)
+    return IMPROVEMENT_CATEGORY_ORDER.map((category) => ({
+      category,
+      label: IMPROVEMENT_CATEGORY_LABELS[category],
+      improvements: sortImprovementsInCategory(visible.filter((i) => i.category === category)),
+    })).filter((group) => group.improvements.length > 0)
+  }
+
+  /** Améliorations achetées (historique / flavour), triées par catégorie. */
+  function boughtImprovements(): ImprovementType[] {
+    const bought = improvements.value.filter((i) => i.isBought)
+    return IMPROVEMENT_CATEGORY_ORDER.flatMap((category) =>
+      sortImprovementsInCategory(bought.filter((i) => i.category === category)),
+    )
   }
 
   return {
@@ -194,7 +243,10 @@ export const useImprovementStore = defineStore('improvements', () => {
     canBuyImprovement,
     updateImprovementVisibility,
     getResourceImprovementEffects,
+    getResourceMaxImprovementBonus,
     initializeImprovements,
     getImprovement,
+    visibleImprovementsByCategory,
+    boughtImprovements,
   }
 })

@@ -15,7 +15,8 @@ import { useGaugeStore } from '@/stores/gaugeStore'
 import { useImprovementStore } from '@/stores/improvementStore'
 import { useLogStore } from '@/stores/logStore'
 import { useResourceStore } from '@/stores/resourceStore'
-import { useWorldStore } from '@/stores/worldStore'
+import { useMonumentStore } from '@/stores/monumentStore'
+import { useBuildingStore } from '@/stores/buildingStore'
 
 /**
  * Horloge de simulation : instancie le `ClockEngine`, enregistre les systèmes
@@ -52,7 +53,8 @@ export const useClockStore = defineStore('clock', () => {
   const eventStore = useEventStore()
   const activityStore = useActivityStore()
   const improvementStore = useImprovementStore()
-  const worldStore = useWorldStore()
+  const monumentStore = useMonumentStore()
+  const buildingStore = useBuildingStore()
 
   /** Événements `once` déjà tirés (voir `eventsSystem`). Ne pas vider au restart moteur après chargement sauvegarde. */
   const onceFiredEventIds = new Set<string>()
@@ -72,13 +74,14 @@ export const useClockStore = defineStore('clock', () => {
       tick.value = ctx.tick
       improvementStore.applyGameTime(ctx.elapsed)
       activityStore.applyGameTime(ctx.elapsed)
-      worldStore.applyGameTime(ctx.elapsed)
+      monumentStore.applyGameTime(ctx.elapsed)
+      buildingStore.applyGameTime(ctx.elapsed)
     },
   }
 
   const eventsSystem = createEventsSystem({
     getEra: () => characterStore.getActiveCharacter()?.era ?? 0,
-    addLog: (message) => logStore.addLog(message),
+    addLog: (message, kind) => logStore.addLog(message, kind),
     getFlag: (flag) => gameStateStore.getFlag(flag),
     setFlag: (flag, value) => gameStateStore.setFlag(flag, value),
     getCounter: (counter) => gameStateStore.getCounter(counter),
@@ -89,6 +92,11 @@ export const useClockStore = defineStore('clock', () => {
     getGaugeQuantity: (slug) => gaugeStore.getGaugeQuantity(slug),
     spendGauge: (slug, qty) => gaugeStore.trySpendGauge(slug, qty),
     addGauge: (slug, amt) => gaugeStore.addGauge(slug, amt),
+    setEra: (era) => {
+      characterStore.setEra(era)
+      activityStore.cancelActiveTimedAndRefund()
+      activityStore.updateActivityVisibility()
+    },
     enqueueEvent: (event) => eventStore.enqueueEvent(event),
     onceFiredEventIds,
   })
@@ -114,13 +122,14 @@ export const useClockStore = defineStore('clock', () => {
   function clearScheduledSimActions(): void {
     activityStore.resetCooldowns()
     improvementStore.clearPendingBuilds()
-    worldStore.cancelPendingRepairsAndRefund()
+    monumentStore.cancelPendingRepairsAndRefund()
   }
 
   function zeroSimTimeInStores(): void {
     activityStore.applyGameTime(0)
     improvementStore.applyGameTime(0)
-    worldStore.applyGameTime(0)
+    monumentStore.applyGameTime(0)
+    buildingStore.applyGameTime(0)
   }
 
   function start(options?: { skipGameStateReset?: boolean; skipClearScheduled?: boolean }): void {
@@ -145,7 +154,8 @@ export const useClockStore = defineStore('clock', () => {
     elapsed.value = s
     improvementStore.applyGameTime(s)
     activityStore.applyGameTime(s)
-    worldStore.applyGameTime(s)
+    monumentStore.applyGameTime(s)
+    buildingStore.applyGameTime(s)
   }
 
   function stop(): void {

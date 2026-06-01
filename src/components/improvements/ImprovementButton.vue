@@ -1,16 +1,27 @@
 <template>
   <div class="relative group inline-block">
-    <button
-      class="relative bg-neutral-600 border border-gray-400 rounded-xl px-2 py-1 text-white transition-all duration-20 overflow-hidden hover:bg-neutral-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-neutral-600 max-h-[32px]"
-      :disabled="isBuilding || !canBuy" @click="handleBuyImprovement(improvement.slug)">
-      <span class="z-10 text-white relative block">{{ improvement.name }}</span>
+    <button type="button"
+      class="relative overflow-hidden rounded border px-2 py-1 text-white transition-all duration-100 disabled:cursor-not-allowed disabled:opacity-50"
+      :class="buttonClasses" :disabled="isBuilding || !canBuy" @click="handleBuyImprovement(improvement.slug)">
+      <span v-if="isMilestone"
+        class="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-600/25 via-transparent to-amber-900/20"
+        aria-hidden="true" />
+      <span class="relative z-10 block" :class="isMilestone ? 'font-semibold tracking-wide' : ''">
+        {{ improvement.name }}
+      </span>
       <span v-show="isBuilding" :style="{ width: 100 - buildProgress + '%' }"
-        class="absolute top-0 left-0 h-full bg-white opacity-50 transition-all block duration-100"></span>
+        class="absolute top-0 left-0 z-[1] block h-full bg-white opacity-50 transition-all duration-100" />
     </button>
 
     <GameTooltip placement="below">
-      <p class="text-sm font-semibold">{{ improvement.name }}</p>
-      <p v-if="improvement.flavourText" class="mt-1 text-[11px] italic opacity-90">
+      <p class="text-sm font-semibold" :class="isMilestone ? 'text-amber-100' : ''">
+        {{ improvement.name }}
+      </p>
+      <p v-if="isMilestone" class="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300/90">
+        Jalon
+      </p>
+      <p v-if="improvement.flavourText" class="mt-1 text-[11px] italic"
+        :class="isMilestone ? 'text-amber-50/95' : 'opacity-90'">
         {{ improvement.flavourText }}
       </p>
       <p class="mt-2 text-[11px] opacity-95">Temps : {{ improvement.buildTime }}s</p>
@@ -26,10 +37,11 @@
 <script lang="ts" setup>
 import GameTooltip from '@/components/ui/GameTooltip.vue'
 import { useImprovementStore } from '@/stores/improvementStore.ts'
-import type {
-  ImprovementConditionType,
-  ImprovementEffectType,
-  ImprovementType,
+import {
+  isMilestoneImprovement,
+  type ImprovementConditionType,
+  type ImprovementEffectType,
+  type ImprovementType,
 } from '@/types/ImprovementType'
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -45,6 +57,20 @@ const { tick } = storeToRefs(clockStore)
 
 const props = defineProps<{ improvement: ImprovementType }>()
 
+const isMilestone = computed(() => isMilestoneImprovement(props.improvement))
+
+const buttonClasses = computed(() => {
+  if (isMilestone.value) {
+    return [
+      'min-h-[36px] max-h-[40px] border-2 border-amber-400/75 bg-neutral-800',
+      'shadow-[0_0_12px_rgba(251,191,36,0.15)]',
+      'hover:border-amber-300 hover:bg-neutral-700 hover:shadow-[0_0_16px_rgba(251,191,36,0.25)]',
+      'disabled:hover:border-amber-400/75 disabled:hover:bg-neutral-800 disabled:hover:shadow-[0_0_12px_rgba(251,191,36,0.15)]',
+    ].join(' ')
+  }
+  return 'max-h-[32px] border-gray-400 bg-neutral-600 hover:bg-neutral-500 disabled:hover:bg-neutral-600'
+})
+
 const isBuilding = computed(() => {
   void tick.value
   return improvementStore.isPendingBuild(props.improvement.slug)
@@ -55,23 +81,21 @@ const buildProgress = computed(() => {
   return improvementStore.getBuildProgress01(props.improvement.slug, props.improvement.buildTime) * 100
 })
 
-// `canBuyImprovement` reads reactive stores so this computed re-evaluates
-// whenever the player's resources or other gating state change.
 const canBuy = computed(() => improvementStore.canBuyImprovement(props.improvement.slug))
 
 const hasCost = computed(() => {
   const costs = props.improvement.costs
   if (!costs) return false
-  return costs.some(({ quantity }: { quantity: number }) => quantity > 0)
+  return costs.some(({ quantity }) => quantity > 0)
 })
 
 const formattedCost = computed(() => {
   const costs = props.improvement.costs
   if (!costs) return ''
   return costs
-    .filter(({ quantity }: { quantity: number }) => quantity > 0)
+    .filter(({ quantity }) => quantity > 0)
     .map(
-      ({ resourceSlug, quantity }: { resourceSlug: string, quantity: number }) =>
+      ({ resourceSlug, quantity }) =>
         `${quantity} ${resourceStore.getResource(resourceSlug)?.name ?? resourceSlug}`,
     )
     .join(', ')
@@ -89,14 +113,19 @@ function formatConditions(conditions: ImprovementConditionType | undefined): str
       parts.push(`avoir ${qty} ${slug}`)
     }
   }
-  if (conditions.requiredImprovement) parts.push(`après ${improvementStore.getImprovement(conditions.requiredImprovement)?.name ?? conditions.requiredImprovement}`)
+  if (conditions.requiredImprovement)
+    parts.push(
+      `après ${improvementStore.getImprovement(conditions.requiredImprovement)?.name ?? conditions.requiredImprovement}`,
+    )
   return parts.join(', ')
 }
 
 function formatEffect(effect: ImprovementEffectType): string {
   switch (effect.kind) {
     case 'resourceRate':
-      return `${effect.amount >= 0 ? '+' : ''}${effect.amount} ${effect.resourceSlug}/s`
+      return `${effect.amount >= 0 ? '+' : ''}${effect.amount} ${resourceStore.getResource(effect.resourceSlug)?.name ?? effect.resourceSlug}/s`
+    case 'resourceMaxBonus':
+      return `+${effect.amount} max ${resourceStore.getResource(effect.resourceSlug)?.name ?? effect.resourceSlug}`
     case 'gaugeRate':
       return `${effect.amount >= 0 ? '+' : ''}${effect.amount} ${effect.gaugeSlug}/s`
     case 'incrementCounter':

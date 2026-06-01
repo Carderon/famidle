@@ -46,10 +46,16 @@ export const useCharacterStore = defineStore('character', () => {
     return characters.value[activeCharacterIndex.value]
   }
 
+  function setEra(era: number) {
+    const c = getActiveCharacter()
+    if (c) c.era = era
+  }
+
   return {
     characters,
     addCharacter,
     activeCharacterIndex,
     getActiveCharacter,
+    setEra,
   }
 })

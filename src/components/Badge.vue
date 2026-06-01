@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center justify-center">
-    <img :src="badgeImage" :alt="`Era Badge`" class="h-[100px] w-[100px]" />
+    <img :src="badgeImage" :alt="`Era Badge`" class="h-[200px]" />
   </div>
 </template>
 
@@ -13,7 +13,7 @@ import { useCharacterStore } from '@/stores/characterStore.ts'
 const badgeStages = [
   '/famidle/default.png',
   '/famidle/firecamp.gif', // https://www.deviantart.com/camilaxiao/art/Warm-Bonfire-Pixel-Art-Animation-856983081
-  '/famidle/stage2.png',
+  '/famidle/lantern.png',
   '/famidle/stage3.png',
   '/famidle/stage4.png',
   '/famidle/stage5.png',

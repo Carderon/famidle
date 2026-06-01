@@ -7,10 +7,12 @@ import {
   spendChoiceCosts,
   type EventEngineDeps,
 } from '@/engines/events/eventEngine'
+import { useCharacterStore } from './characterStore'
 import { useGameStateStore } from './gameStateStore'
 import { useGaugeStore } from './gaugeStore'
 import { useLogStore } from './logStore'
 import { useResourceStore } from './resourceStore'
+import { useActivityStore } from './activityStore'
 
 /**
  * Runtime queue for interactive events.
@@ -31,8 +33,11 @@ export const useEventStore = defineStore('event', () => {
     const resourceStore = useResourceStore()
     const gaugeStore = useGaugeStore()
 
+    const characterStore = useCharacterStore()
+    const activityStore = useActivityStore()
+
     return {
-      addLog: (message) => logStore.addLog(message),
+      addLog: (message, kind) => logStore.addLog(message, kind),
       getFlag: (flag) => gameState.getFlag(flag),
       setFlag: (flag, value) => gameState.setFlag(flag, value),
       getCounter: (counter) => gameState.getCounter(counter),
@@ -43,6 +48,11 @@ export const useEventStore = defineStore('event', () => {
       getGaugeQuantity: (slug) => gaugeStore.getGaugeQuantity(slug),
       spendGauge: (slug, qty) => gaugeStore.trySpendGauge(slug, qty),
       addGauge: (slug, amt) => gaugeStore.addGauge(slug, amt),
+      setEra: (era) => {
+        characterStore.setEra(era)
+        activityStore.cancelActiveTimedAndRefund()
+        activityStore.updateActivityVisibility()
+      },
     }
   }
 

@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { clearSavedGame, saveGameToStorage } from '@/gamePersistence'
+import { clearSavedGame, saveGameToStorage } from '@/persistence/gamePersistence'
 import { LINK_GITHUB_PROFILE, LINK_GITHUB_REPO, LINK_WEBSITE } from '@/config/site'
 import { isDarkMode, setDarkMode } from '@/utils/theme'
 

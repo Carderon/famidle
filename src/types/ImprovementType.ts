@@ -1,5 +1,31 @@
 import type { ResourceCostBag } from '@/types/ResourceType'
 
+/** Regroupement UI des améliorations (ordre via `IMPROVEMENT_CATEGORY_ORDER`). */
+export type ImprovementCategory = 'introspection' | 'reconstruction' | 'era' | 'production'
+
+export const IMPROVEMENT_CATEGORY_ORDER: readonly ImprovementCategory[] = [
+  'introspection',
+  'reconstruction',
+  'era',
+  'production',
+] as const
+
+export const IMPROVEMENT_CATEGORY_LABELS: Record<ImprovementCategory, string> = {
+  introspection: 'Introspection',
+  reconstruction: 'Reconstruction',
+  era: 'Ère',
+  production: 'Production',
+}
+
+/** Jalons narratifs (ère, révélations…) — style de bouton renforcé. */
+export type ImprovementImportance = 'normal' | 'milestone'
+
+/** `true` si `importance === 'milestone'` ou effet `setEra` (passage d’ère). */
+export function isMilestoneImprovement(improvement: ImprovementType): boolean {
+  if (improvement.importance === 'milestone') return true
+  return improvement.effects?.some((e) => e.kind === 'setEra') ?? false
+}
+
 /**
  * Conditions that gate an improvement (visibility + buyability).
  *
@@ -18,6 +44,8 @@ export interface ImprovementConditionType {
   minResourceQuantity?: Record<string, number>
   /** Slug of an improvement that must already be bought. */
   requiredImprovement?: string
+  /** Flag that must be set to true. */
+  requiredFlag?: string
 }
 
 /**
@@ -29,10 +57,10 @@ export interface ImprovementConditionType {
  *   applied EXACTLY ONCE, when the improvement is bought.
  *   Handled by `improvementEngine.applyEffects`.
  *
- * - **Passive effects** (`resourceRate`):
+ * - **Passive effects** (`resourceRate`, `resourceMaxBonus`):
  *   applied CONTINUOUSLY for as long as the improvement is bought.
- *   Read on demand by `improvementEngine.getResourceRateBonus`
- *   (called from `resourceStore.getResourceRates`).
+ *   Read on demand by `getResourceRateBonus` / `getResourceMaxBonus`
+ *   (called from `resourceStore`).
  *
  * Splitting "what is an effect" from "when is it applied" lets us keep both
  * the engine and the data (`globalImprovements`) declarative.
@@ -40,6 +68,8 @@ export interface ImprovementConditionType {
 export type ImprovementEffectType =
   /** Passive: flat additive bonus on a resource's production rate. */
   | { kind: 'resourceRate'; resourceSlug: string; amount: number }
+  /** Passive: augmente le plafond d’inventaire d’une ressource. */
+  | { kind: 'resourceMaxBonus'; resourceSlug: string; amount: number }
   /** Passive: flat additive bonus on a gauge's production rate. */
   | { kind: 'gaugeRate'; gaugeSlug: string; amount: number }
   /** One-shot: append a message to the log feed. */
@@ -50,6 +80,8 @@ export type ImprovementEffectType =
   | { kind: 'incrementCounter'; counter: string; by?: number }
   /** One-shot: credit a positive `amount` of a resource (capped at max). */
   | { kind: 'addResource'; resourceSlug: string; amount: number }
+  /** One-shot: pass the character to the given era. */
+  | { kind: 'setEra'; era: number }
 
 /**
  * Resource costs paid atomically when the improvement is bought.
@@ -63,11 +95,25 @@ export type ImprovementCost = ResourceCostBag
 export interface ImprovementType {
   name: string
   slug: string
+  /** Section dans la liste d’améliorations. */
+  category: ImprovementCategory
+  /** Tri dans la catégorie (croissant). */
+  sortOrder?: number
+  /**
+   * `milestone` : bouton et tooltip mis en avant (ères, tournants narratifs).
+   * Défaut déduit si un effet `setEra` est présent (`isMilestoneImprovement`).
+   */
+  importance?: ImprovementImportance
   /**
    * Free-form short text shown to the player (tooltip, lore).
    * Pure UI, never read by the engine.
    */
   flavourText?: string
+  /**
+   * Pièce monument liée (affichage « Acquis » uniquement).
+   * Absent = amélioration générale (puits, stockage, ère…).
+   */
+  linkedRoomId?: string
   /** Time (in seconds) the player must wait before the improvement is bought. */
   buildTime: number
   effects?: ImprovementEffectType[]

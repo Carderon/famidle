@@ -7,6 +7,7 @@ import { useGameStateStore } from '@/stores/gameStateStore'
 import type { ResourceCostBag } from '@/types/ResourceType'
 import type { ResourceType } from '@/types/ResourceType'
 import { age1Resources } from '@/data/resources/age1'
+import { age2Resources } from '@/data/resources/age2'
 import { globalResources } from '@/data/resources/global'
 
 /**
@@ -29,13 +30,21 @@ export const useResourceStore = defineStore('resource', () => {
   const activityStore = useActivityStore()
   const gameState = useGameStateStore()
 
-  const resources = ref<ResourceType[]>([...globalResources, ...age1Resources])
+  const resources = ref<ResourceType[]>(
+    [...globalResources, ...age1Resources, ...age2Resources].map((r) => ({
+      ...r,
+      baseMax: r.max,
+    })),
+  )
 
   // ---------- Lectures ----------
 
   const getResource = (slug: string) => resources.value.find((r) => r.slug === slug)
 
   const getQuantity = (slug: string): number => getResource(slug)?.quantity ?? 0
+
+  /** Plafond effectif (base data + bonus d’améliorations). */
+  const getResourceMax = (slug: string): number => getResource(slug)?.max ?? 0
 
   /**
    * `true` si l'inventaire couvre tous les coûts demandés.
@@ -63,6 +72,19 @@ export const useResourceStore = defineStore('resource', () => {
     })
   }
 
+  /** Recalcule `max` à partir de `baseMax` + bonus ; borne `quantity` si besoin. */
+  const recomputeResourceCaps = () => {
+    resources.value.forEach((resource) => {
+      const base = resource.baseMax ?? resource.max
+      if (resource.baseMax == null) resource.baseMax = base
+      const bonus = improvementStore.getResourceMaxImprovementBonus(resource.slug)
+      resource.max = base + bonus
+      if (resource.quantity > resource.max) {
+        resource.quantity = resource.max
+      }
+    })
+  }
+
   /**
    * Ajoute (ou retire si négatif) une quantité à une ressource.
    * Borne à `[0, resource.max]` pour rester safe.
@@ -70,7 +92,7 @@ export const useResourceStore = defineStore('resource', () => {
   const updateResource = (resourceSlug: string, amount: number) => {
     const resource = getResource(resourceSlug)
     if (!resource) return
-    resource.quantity = Math.max(0, Math.min(resource.quantity + amount, resource.max))
+    resource.quantity = Math.max(0, Math.min(resource.quantity + amount, getResourceMax(resourceSlug)))
   }
 
   /**
@@ -181,10 +203,12 @@ export const useResourceStore = defineStore('resource', () => {
     resources,
     getResource,
     getQuantity,
+    getResourceMax,
     canAfford,
     addResource,
     spendResource,
     getResourceRates,
+    recomputeResourceCaps,
     produceResources,
     recomputeVisibility,
     initializeResources,

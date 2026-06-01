@@ -3,6 +3,7 @@ export type ResourceType = {
   name: string
   quantity: number
   baseRate: number
+  baseMax?: number
   max: number
   finalRate: number
   flavourText: string

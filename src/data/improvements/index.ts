@@ -1,6 +1,7 @@
 import type { ImprovementType } from '@/types/ImprovementType'
 import { globalImprovements } from './global'
 import { age1Improvements } from './age1'
+import { age2Improvements } from './age2'
 
 /**
  * Single source of truth for improvements consumed by `improvementStore`.
@@ -14,4 +15,8 @@ import { age1Improvements } from './age1'
  * When age1/age2 specific improvement files are added, just import and spread
  * them here.
  */
-export const improvementsData: ImprovementType[] = [...globalImprovements, ...age1Improvements]
+export const improvementsData: ImprovementType[] = [
+  ...globalImprovements,
+  ...age1Improvements,
+  ...age2Improvements,
+]

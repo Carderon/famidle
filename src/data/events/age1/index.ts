@@ -18,7 +18,7 @@ export const age1Events: EventType[] = [
     id: 'age1.event.wakeUp',
     trigger: { kind: 'time', atSeconds: 2 },
     effects: [
-      { kind: 'log', message: 'Tu te réveilles dans une chambre poussiéreuse.' },
+      { kind: 'log', message: 'Tu te réveilles, derrière, le néant.' },
       { kind: 'setFlag', flag: 'age1.flag.awake' },
     ],
   },
@@ -28,18 +28,18 @@ export const age1Events: EventType[] = [
     id: 'age1.event.firewoodHandful',
     trigger: { kind: 'time', atSeconds: 4 },
     effects: [
-      { kind: 'log', message: 'Un vieux fagot traîne au pied du lit. Tu le ramasses.' },
+      { kind: 'log', message: 'Un vieux fagot traîne dans la ruine, tu le ramasses' },
       { kind: 'addResource', resourceSlug: 'age1.resource.wood', amount: 1 },
     ],
   },
 
-  // 3) Trigger flag + choices payants — réagit au flag posé par l'achat de firecamp
+  // 3) Trigger flag + choices payants — réagit au flag posé par l'achat de firecamp. Le faire apparaitre plus tard quand toutes l'UI est chargée
   {
     id: 'age1.event.firstNoise',
     title: 'Un bruit dans le couloir',
     description:
       'Un grincement résonne au bout du couloir. La maison n’est peut-être pas aussi vide que tu l’espérais.',
-    trigger: { kind: 'flag', flag: 'age1.flag.firecampLit' },
+    trigger: { kind: 'flag', flag: 'ui.flag.activityShown' },
     effects: [{ kind: 'log', message: 'Un grincement résonne au bout du couloir.' }],
     choices: [
       {
@@ -120,7 +120,7 @@ export const age1Events: EventType[] = [
         label: 'Ne rien faire',
         description: 'Le stress vous épuise un peu.',
         gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 6 }],
-        effects: [{ kind: 'log', message: 'Vous restez figé.e. Le sommeil vous quitte mal.' }],
+        effects: [{ kind: 'log', message: 'Vous restez figé Le sommeil vous quitte mal.' }],
       },
     ],
   },
@@ -154,6 +154,37 @@ export const age1Events: EventType[] = [
         effects: [
           { kind: 'addResource', resourceSlug: 'age1.resource.cloth', amount: 60 },
           { kind: 'log', message: 'Une ouverture se dessine sans effort.' },
+        ],
+      },
+    ],
+  },
+
+  /**
+   * Fin du tutoriel (BRIEF : chambre 100 % — 9 tuiles).
+   * Une fois le choix validé : passage en ère 2 (bâtiments producteurs à venir).
+   */
+  {
+    id: 'age1.event.endTutorial',
+    title: 'La chambre tient debout',
+    description:
+      'Les neuf cases sont refermées : plus une ouverture qui grince sans raison. Les ruines vous ont appris à marcher ici ; demain, ce sera sur un autre chantier.',
+    trigger: { kind: 'counter', counter: 'age1.counter.tilesRepaired', atLeast: 9 },
+    maxEra: 1,
+    effects: [{ kind: 'log', message: 'La chambre tient debout.' }],
+    choices: [
+      {
+        id: 'enterAge2',
+        label: 'Sortir des ruines',
+        description:
+          'Passer à l’ère des chantiers : producteurs, extensions simples. Sauvegarde conseillée avant.',
+        effects: [
+          { kind: 'setFlag', flag: 'age1.flag.era1Complete', value: true },
+          { kind: 'setFlag', flag: 'ui.flag.journalShown', value: true },
+          {
+            kind: 'log',
+            message:
+              'Vous quittez la chambre. La maison, plus vaste, vous attend — et, au-delà, ceux qui n’ont pas encore reçu votre message.',
+          },
         ],
       },
     ],

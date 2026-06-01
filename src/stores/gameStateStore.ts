@@ -14,7 +14,7 @@ import { ref } from 'vue'
  * Naming convention: `scope.kind.name`, e.g. `age1.flag.firstNightSurvived`.
  *
  * This store is the canonical bridge between gameplay actions
- * (e.g. `worldStore.repairTile`) and the event engine that watches state.
+ * (e.g. `monumentStore` / `buildingStore` et moteurs associés) and the event engine that watches state.
  */
 export const useGameStateStore = defineStore('gameState', () => {
   const flags = ref<Record<string, boolean>>({})

@@ -1,3 +1,4 @@
+import type { AddLogFn } from '@/types/LogType'
 import type {
   ImprovementCost,
   ImprovementEffectType,
@@ -13,11 +14,13 @@ import type {
  */
 export interface ImprovementEngineDeps {
   // --- mutators (used by applyEffects / buy) ---
-  addLog: (message: string) => void
+  addLog: AddLogFn
   setFlag: (flag: string, value?: boolean) => void
   incrementCounter: (counter: string, by?: number) => void
   addResource: (slug: string, amount: number) => void
   spendResource: (costs: ImprovementCost) => boolean
+  setEra: (era: number) => void
+  getFlag: (flag: string) => boolean
 
   // --- getters (used by meetsConditions / canAfford) ---
   getCharacterClass: () => string | undefined
@@ -46,6 +49,7 @@ export function meetsConditions(
     | 'getCharacterLevel'
     | 'getResourceQuantity'
     | 'isImprovementBought'
+    | 'getFlag'
   >,
 ): boolean {
   const c = improvement.conditions
@@ -63,6 +67,8 @@ export function meetsConditions(
   }
 
   if (c.requiredImprovement && !deps.isImprovementBought(c.requiredImprovement)) return false
+
+  if (c.requiredFlag && !deps.getFlag(c.requiredFlag)) return false
 
   return true
 }
@@ -104,14 +110,14 @@ export function applyEffects(
   effects: readonly ImprovementEffectType[] | undefined,
   deps: Pick<
     ImprovementEngineDeps,
-    'addLog' | 'setFlag' | 'incrementCounter' | 'addResource'
+    'addLog' | 'setFlag' | 'incrementCounter' | 'addResource' | 'setEra'
   >,
 ): void {
   if (!effects) return
   for (const effect of effects) {
     switch (effect.kind) {
       case 'log':
-        deps.addLog(effect.message)
+        deps.addLog(effect.message, 'unlock')
         break
       case 'setFlag':
         deps.setFlag(effect.flag, effect.value ?? true)
@@ -122,8 +128,14 @@ export function applyEffects(
       case 'addResource':
         deps.addResource(effect.resourceSlug, effect.amount)
         break
+      case 'setEra':
+        deps.setEra(effect.era)
+        break
       case 'resourceRate':
         // Passive: read continuously by getResourceRateBonus, not applied here.
+        break
+      case 'resourceMaxBonus':
+        // Passive: read continuously by getResourceMaxBonus, not applied here.
         break
     }
   }
@@ -145,6 +157,23 @@ export function getResourceRateBonus(
     if (!imp.isBought || !imp.effects) continue
     for (const effect of imp.effects) {
       if (effect.kind === 'resourceRate' && effect.resourceSlug === resourceSlug) {
+        total += effect.amount
+      }
+    }
+  }
+  return total
+}
+
+/** Somme des bonus `resourceMaxBonus` des améliorations achetées. */
+export function getResourceMaxBonus(
+  improvements: readonly ImprovementType[],
+  resourceSlug: string,
+): number {
+  let total = 0
+  for (const imp of improvements) {
+    if (!imp.isBought || !imp.effects) continue
+    for (const effect of imp.effects) {
+      if (effect.kind === 'resourceMaxBonus' && effect.resourceSlug === resourceSlug) {
         total += effect.amount
       }
     }

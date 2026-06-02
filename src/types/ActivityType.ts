@@ -59,6 +59,8 @@ export interface ActivityConditionType {
   requiredImprovement?: string
   /** Le flag doit être `true` (ex. `ui.flag.activityShown`). */
   requiredFlag?: string
+  /** Si ce flag est `true`, l’activité reste masquée (ex. cacher « Se reposer » quand « Dormir » est débloqué). */
+  hiddenWhenFlag?: string
   /** Ère minimale du personnage actif (`era >= minEra`). */
   minEra?: number
   /** Ère maximale du personnage actif (`era <= maxEra`). */

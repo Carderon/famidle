@@ -127,4 +127,26 @@ export const age2Activities: ActivityType[] = [
     ],
     isVisible: false,
   },
+  {
+    slug: 'age2.activity.refineCrystal',
+    name: 'Extraire les cristaux',
+    category: 'gather',
+    sortOrder: 50,
+    kind: 'instant',
+    flavourText:
+      'Lent, méticuleux, sans filet — chaque éclat compte ; on ne précipite pas ce genre de trouvaille.',
+    cooldownSeconds: 36,
+    gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 7 }],
+    costs: [
+      { resourceSlug: 'age2.resource.glass', quantity: 3 },
+      { resourceSlug: 'age1.resource.stone', quantity: 10 },
+      { resourceSlug: 'age2.resource.water', quantity: 8 },
+    ],
+    conditions: { requiredFlag: 'age2.flag.canGatherCrystal', minEra: 2 },
+    effects: [
+      { kind: 'addResource', resourceSlug: 'age2.resource.crystal', amount: 2 },
+      { kind: 'logOnce', message: 'Quelques cristaux sortent du creuset — rares et nets.' },
+    ],
+    isVisible: false,
+  },
 ]

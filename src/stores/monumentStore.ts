@@ -97,7 +97,9 @@ export const useMonumentStore = defineStore('monument', () => {
     ctx.tile.state = 'ready'
     const gameState = useGameStateStore()
     // maybe not the best place to put this
-    gameState.incrementCounter('age1.counter.tilesRepaired')
+    if (ctx.tile.id.startsWith('age1.tile.bedroom.')) {
+      gameState.incrementCounter('age1.counter.bedroomTilesRepaired')
+    }
     if (ctx.tile.id.startsWith('age2.tile.garden.')) {
       gameState.incrementCounter('age2.counter.gardenTilesRepaired')
     }
@@ -109,6 +111,12 @@ export const useMonumentStore = defineStore('monument', () => {
     }
     if (ctx.tile.id.startsWith('age2.tile.laboratory.')) {
       gameState.incrementCounter('age2.counter.laboratoryTilesRepaired')
+    }
+    if (ctx.tile.id.startsWith('age2.tile.bathroom.')) {
+      gameState.incrementCounter('age2.counter.bathroomTilesRepaired')
+    }
+    if (ctx.tile.id.startsWith('age2.tile.kitchen.')) {
+      gameState.incrementCounter('age2.counter.kitchenTilesRepaired')
     }
   }
 

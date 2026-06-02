@@ -128,6 +128,10 @@ function formatEffect(effect: ImprovementEffectType): string {
       return `+${effect.amount} max ${resourceStore.getResource(effect.resourceSlug)?.name ?? effect.resourceSlug}`
     case 'gaugeRate':
       return `${effect.amount >= 0 ? '+' : ''}${effect.amount} ${effect.gaugeSlug}/s`
+    case 'gaugeMaxBonus': {
+      const gaugeNames: Record<string, string> = { health: 'vitalité', stamina: 'endurance' }
+      return `+${effect.amount} max ${gaugeNames[effect.gaugeSlug] ?? effect.gaugeSlug}`
+    }
     case 'incrementCounter':
       return `${effect.counter} +${effect.by ?? 1}`
     case 'addResource':

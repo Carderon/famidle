@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useResourceStore } from '@/stores/resourceStore'
+import { useGaugeStore } from '@/stores/gaugeStore'
 import { useCharacterStore } from '@/stores/characterStore'
 import { useGameStateStore } from '@/stores/gameStateStore'
 import { useActivityStore } from '@/stores/activityStore'
@@ -17,6 +18,7 @@ import {
   canAffordImprovement,
   getResourceRateBonus,
   getResourceMaxBonus,
+  getGaugeMaxBonus,
   meetsConditions,
   spendImprovementCosts,
   type ImprovementEngineDeps,
@@ -154,8 +156,10 @@ export const useImprovementStore = defineStore('improvements', () => {
     improvement.isBought = true
     applyEffects(improvement.effects, deps)
     const resourceStore = useResourceStore()
+    const gaugeStore = useGaugeStore()
     resourceStore.getResourceRates()
     resourceStore.recomputeResourceCaps()
+    gaugeStore.recomputeGaugeCaps()
     resourceStore.recomputeVisibility()
     useActivityStore().updateActivityVisibility()
     return true
@@ -192,6 +196,10 @@ export const useImprovementStore = defineStore('improvements', () => {
     return getResourceMaxBonus(improvements.value, resourceSlug)
   }
 
+  function getGaugeMaxImprovementBonus(gaugeSlug: string): number {
+    return getGaugeMaxBonus(improvements.value, gaugeSlug)
+  }
+
   function initializeImprovements() {
     updateImprovementVisibility()
   }
@@ -222,9 +230,9 @@ export const useImprovementStore = defineStore('improvements', () => {
     })).filter((group) => group.improvements.length > 0)
   }
 
-  /** Améliorations achetées (historique / flavour), triées par catégorie. */
+  /** Améliorations achetées avec `isShown`, triées par catégorie (panneau Acquis). */
   function boughtImprovements(): ImprovementType[] {
-    const bought = improvements.value.filter((i) => i.isBought)
+    const bought = improvements.value.filter((i) => i.isBought && i.isShown === true)
     return IMPROVEMENT_CATEGORY_ORDER.flatMap((category) =>
       sortImprovementsInCategory(bought.filter((i) => i.category === category)),
     )
@@ -244,6 +252,7 @@ export const useImprovementStore = defineStore('improvements', () => {
     updateImprovementVisibility,
     getResourceImprovementEffects,
     getResourceMaxImprovementBonus,
+    getGaugeMaxImprovementBonus,
     initializeImprovements,
     getImprovement,
     visibleImprovementsByCategory,

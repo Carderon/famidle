@@ -72,6 +72,8 @@ export type ImprovementEffectType =
   | { kind: 'resourceMaxBonus'; resourceSlug: string; amount: number }
   /** Passive: flat additive bonus on a gauge's production rate. */
   | { kind: 'gaugeRate'; gaugeSlug: string; amount: number }
+  /** Passive: augmente le plafond d’une jauge (vitalité, endurance…). */
+  | { kind: 'gaugeMaxBonus'; gaugeSlug: string; amount: number }
   /** One-shot: append a message to the log feed. */
   | { kind: 'log'; message: string }
   /** One-shot: set a flag (default `true`). */
@@ -121,5 +123,11 @@ export interface ImprovementType {
   /** Resources debited at purchase time. */
   costs?: ImprovementCost
   isBought: boolean
+  /** Peut apparaître dans la liste d’achat (conditions remplies). */
   isVisible: boolean
+  /**
+   * Afficher dans le panneau **Acquis** après achat.
+   * `false` ou absent : masqué (lore, déblocages flags, jalons d’ère…).
+   */
+  isShown?: boolean
 }

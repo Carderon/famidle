@@ -4,7 +4,7 @@ import { ref } from 'vue'
 /**
  * Store of "small persistent state" that drives the simulation:
  * - **flags** : booleans (`age1.flag.firstScavengeDone`)
- * - **counters** : integers (`age1.counter.tilesRepaired`)
+ * - **counters** : integers (`age1.counter.bedroomTilesRepaired`)
  *
  * Flags and counters are intentionally combined in a single store because:
  * - they share the same lifecycle (set/reset on game start, persisted later)

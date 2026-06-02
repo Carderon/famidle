@@ -49,7 +49,7 @@ export function getFreshResources(): ResourceType[] {
 }
 
 export function getFreshGauges(): GaugeType[] {
-  return globalGauges.map((g) => ({ ...g }))
+  return globalGauges.map((g) => ({ ...g, baseMax: g.max }))
 }
 
 export function getFreshMonuments(): Monument[] {
@@ -112,10 +112,12 @@ export function mergeGauges(saved: readonly GaugeType[]): GaugeType[] {
   const savedBySlug = new Map(saved.map((g) => [g.slug, g]))
   return getFreshGauges().map((fresh) => {
     const prev = savedBySlug.get(fresh.slug)
-    if (!prev) return fresh
+    const baseMax = fresh.baseMax ?? fresh.max
+    if (!prev) return { ...fresh, baseMax }
     return {
       ...fresh,
-      current: Math.min(prev.current, fresh.max),
+      baseMax,
+      current: prev.current,
     }
   })
 }

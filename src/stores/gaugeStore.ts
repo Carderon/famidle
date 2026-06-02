@@ -2,11 +2,21 @@ import { globalGauges } from '@/data/gauges/global'
 import type { GaugeType } from '@/types/GaugeType'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { getGaugeMaxBonus } from '@/engines/improvements/improvementEngine'
+import { useImprovementStore } from '@/stores/improvementStore'
 
 export const useGaugeStore = defineStore('gauge', () => {
-  const gauges = ref<GaugeType[]>([...globalGauges])
-  // Recalcule `finalRegenRate` (base + bonus d'improvements quand on en aura).
-  // À appeler quand un improvement est acheté/changé, pas à chaque frame.
+  const gauges = ref<GaugeType[]>(
+    globalGauges.map((g) => ({
+      ...g,
+      baseMax: g.max,
+    })),
+  )
+
+  const getGaugeMax = (gaugeSlug: string): number => {
+    return gauges.value.find((g) => g.slug === gaugeSlug)?.max ?? 0
+  }
+
   const getGaugeRates = () => {
     gauges.value.forEach((gauge) => {
       const improvementEffect = 0
@@ -14,26 +24,33 @@ export const useGaugeStore = defineStore('gauge', () => {
     })
   }
 
+  const recomputeGaugeCaps = () => {
+    gauges.value.forEach((gauge) => {
+      const base = gauge.baseMax ?? gauge.max
+      if (gauge.baseMax == null) gauge.baseMax = base
+      const bonus = getGaugeMaxBonus(useImprovementStore().improvements, gauge.slug)
+      gauge.max = base + bonus
+      if (gauge.current > gauge.max) {
+        gauge.current = gauge.max
+      }
+    })
+  }
+
   const getGaugeQuantity = (gaugeSlug: string): number => {
     return gauges.value.find((g) => g.slug === gaugeSlug)?.current ?? 0
   }
 
-  /**
-   * Ajoute (ou retire si négatif) une quantité à une jauge, bornée à `[0, max]`.
-   */
   const updateGauge = (gaugeSlug: string, amount: number) => {
     const gauge = gauges.value.find((g) => g.slug === gaugeSlug)
     if (!gauge) return
-    gauge.current = Math.max(0, Math.min(gauge.current + amount, gauge.max))
+    gauge.current = Math.max(0, Math.min(gauge.current + amount, getGaugeMax(gaugeSlug)))
   }
 
-  /** Crédite une jauge (montant positif uniquement), utile pour effets / événements. */
   const addGauge = (gaugeSlug: string, amount: number) => {
     if (amount <= 0) return
     updateGauge(gaugeSlug, amount)
   }
 
-  /** Débite une jauge si le solde suffit ; sinon ne modifie rien. */
   const trySpendGauge = (gaugeSlug: string, quantity: number): boolean => {
     if (quantity <= 0) return true
     const gauge = gauges.value.find((g) => g.slug === gaugeSlug)
@@ -42,12 +59,6 @@ export const useGaugeStore = defineStore('gauge', () => {
     return true
   }
 
-  /**
-   * Régénération des jauges sur un intervalle `dt` (en secondes).
-   *
-   * Appelé à chaque tick du `ClockEngine` via `gaugesSystem`.
-   * Volontairement minimal et idempotent (safe à ~60 Hz).
-   */
   const regenGauges = (dt: number) => {
     if (dt <= 0) return
     gauges.value.forEach((gauge) => {
@@ -62,13 +73,10 @@ export const useGaugeStore = defineStore('gauge', () => {
     //
   }
 
-  const getGaugeMax = (gaugeSlug: string): number => {
-    return gauges.value.find((g) => g.slug === gaugeSlug)?.max ?? 0
-  }
-
   return {
     gauges,
     getGaugeRates,
+    recomputeGaugeCaps,
     getGaugeQuantity,
     updateGauge,
     addGauge,

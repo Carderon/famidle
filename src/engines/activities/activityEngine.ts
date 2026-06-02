@@ -78,6 +78,7 @@ export function meetsConditions(
   if (!c) return true
 
   if (c.requiredFlag && !deps.getFlag(c.requiredFlag)) return false
+  if (c.hiddenWhenFlag && deps.getFlag(c.hiddenWhenFlag)) return false
   if (c.requiredClass && deps.getCharacterClass() !== c.requiredClass) return false
   if (c.requiredSpecialization && deps.getCharacterSpecialization() !== c.requiredSpecialization) {
     return false

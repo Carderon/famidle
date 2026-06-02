@@ -1,22 +1,23 @@
 import type { Tile } from '@/types/MonumentType'
-import { backgroundPlaceholders, playableTile } from '../../tilePresets'
+import { playableTile } from '../../tilePresets'
 
-const br01 = backgroundPlaceholders('G1').broken
-const br02 = backgroundPlaceholders('G2').broken
-const br03 = backgroundPlaceholders('G3').broken
-const br04 = backgroundPlaceholders('G4').broken
-const br05 = backgroundPlaceholders('G5').broken
-const br06 = backgroundPlaceholders('G6').broken
-const br07 = backgroundPlaceholders('G7').broken
-const br08 = backgroundPlaceholders('G8').broken
-const rd01 = backgroundPlaceholders('G1').ready
-const rd02 = backgroundPlaceholders('G2').ready
-const rd03 = backgroundPlaceholders('G3').ready
-const rd04 = backgroundPlaceholders('G4').ready
-const rd05 = backgroundPlaceholders('G5').ready
-const rd06 = backgroundPlaceholders('G6').ready
-const rd07 = backgroundPlaceholders('G7').ready
-const rd08 = backgroundPlaceholders('G8').ready
+import br01 from '@/assets/monuments/age2/library/broken/tile-01.png?url'
+import br02 from '@/assets/monuments/age2/library/broken/tile-02.png?url'
+import br03 from '@/assets/monuments/age2/library/broken/tile-03.png?url'
+import br04 from '@/assets/monuments/age2/library/broken/tile-04.png?url'
+import br05 from '@/assets/monuments/age2/library/broken/tile-05.png?url'
+import br06 from '@/assets/monuments/age2/library/broken/tile-06.png?url'
+import br07 from '@/assets/monuments/age2/library/broken/tile-07.png?url'
+import br08 from '@/assets/monuments/age2/library/broken/tile-08.png?url'
+
+import rd01 from '@/assets/monuments/age2/library/ready/tile-01.png?url'
+import rd02 from '@/assets/monuments/age2/library/ready/tile-02.png?url'
+import rd03 from '@/assets/monuments/age2/library/ready/tile-03.png?url'
+import rd04 from '@/assets/monuments/age2/library/ready/tile-04.png?url'
+import rd05 from '@/assets/monuments/age2/library/ready/tile-05.png?url'
+import rd06 from '@/assets/monuments/age2/library/ready/tile-06.png?url'
+import rd07 from '@/assets/monuments/age2/library/ready/tile-07.png?url'
+import rd08 from '@/assets/monuments/age2/library/ready/tile-08.png?url'
 
 export const libraryTileGridAge2: Tile[][] = [
   [

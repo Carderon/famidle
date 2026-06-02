@@ -2,8 +2,8 @@ import type { Tile } from '@/types/MonumentType'
 import { backgroundPlaceholders, playableTile } from '../../tilePresets'
 
 /**
- * Grille provisoire 2×3 (6 cases) — forme définitive à affiner.
- * Le verre sert aux coûts de réparation (vitrines, alambics, cloisons).
+ * Grille 3×3 — neuf cases (alignée jardin / atelier).
+ * Le verre finance vitrines, alambics et cloisons ; le centre demande plus de lames.
  */
 export const laboratoryTileGridAge2: Tile[][] = [
   [
@@ -18,17 +18,11 @@ export const laboratoryTileGridAge2: Tile[][] = [
         { resourceSlug: 'age2.resource.glass', quantity: 4 },
       ],
     ),
-    playableTile(
-      'age2.tile.laboratory.2',
-      'Sol — nord',
-      'broken',
-      backgroundPlaceholders('L2'),
-      [
-        { resourceSlug: 'age1.resource.wood', quantity: 25 },
-        { resourceSlug: 'age1.resource.stone', quantity: 20 },
-        { resourceSlug: 'age2.resource.glass', quantity: 4 },
-      ],
-    ),
+    playableTile('age2.tile.laboratory.2', 'Sol — nord', 'broken', backgroundPlaceholders('L2'), [
+      { resourceSlug: 'age1.resource.wood', quantity: 25 },
+      { resourceSlug: 'age1.resource.stone', quantity: 20 },
+      { resourceSlug: 'age2.resource.glass', quantity: 4 },
+    ]),
     playableTile(
       'age2.tile.laboratory.3',
       'Sol — nord-est',
@@ -53,17 +47,11 @@ export const laboratoryTileGridAge2: Tile[][] = [
         { resourceSlug: 'age2.resource.glass', quantity: 4 },
       ],
     ),
-    playableTile(
-      'age2.tile.laboratory.5',
-      'Sol — sud',
-      'broken',
-      backgroundPlaceholders('L5'),
-      [
-        { resourceSlug: 'age1.resource.wood', quantity: 25 },
-        { resourceSlug: 'age1.resource.stone', quantity: 20 },
-        { resourceSlug: 'age2.resource.glass', quantity: 5 },
-      ],
-    ),
+    playableTile('age2.tile.laboratory.5', 'Sol — sud', 'broken', backgroundPlaceholders('L5'), [
+      { resourceSlug: 'age1.resource.wood', quantity: 25 },
+      { resourceSlug: 'age1.resource.stone', quantity: 20 },
+      { resourceSlug: 'age2.resource.glass', quantity: 5 },
+    ]),
     playableTile(
       'age2.tile.laboratory.6',
       'Sol — sud-est',

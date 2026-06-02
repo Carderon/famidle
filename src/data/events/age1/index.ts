@@ -73,7 +73,7 @@ export const age1Events: EventType[] = [
     id: 'age1.event.souvenir',
     title: 'Vous trouvez un souvenir',
     description: 'Un petit objet enfoui sous les gravats capte votre attention.',
-    trigger: { kind: 'counter', counter: 'age1.counter.tilesRepaired', atLeast: 3 },
+    trigger: { kind: 'counter', counter: 'age1.counter.bedroomTilesRepaired', atLeast: 3 },
     effects: [{ kind: 'log', message: 'Quelque chose attire votre regard sous la poussière.' }],
     choices: [
       {
@@ -159,18 +159,18 @@ export const age1Events: EventType[] = [
     ],
   },
 
-  /**
-   * Fin du tutoriel (BRIEF : chambre 100 % — 9 tuiles).
-   * Une fois le choix validé : passage en ère 2 (bâtiments producteurs à venir).
-   */
   {
-    id: 'age1.event.endTutorial',
-    title: 'La chambre tient debout',
+    id: 'age1.event.endBedroom',
+    title: 'La chambre est prête',
     description:
-      'Les neuf cases sont refermées : plus une ouverture qui grince sans raison. Les ruines vous ont appris à marcher ici ; demain, ce sera sur un autre chantier.',
-    trigger: { kind: 'counter', counter: 'age1.counter.tilesRepaired', atLeast: 9 },
-    maxEra: 1,
-    effects: [{ kind: 'log', message: 'La chambre tient debout.' }],
+      "Le lit retrouve sa place, les murs ne craquent plus la nuit. Il est bon de s'étendre au lieu de seulement se reposer.",
+    trigger: { kind: 'counter', counter: 'age1.counter.bedroomTilesRepaired', atLeast: 9 },
+    minEra: 2,
+    effects: [
+      { kind: 'log', message: 'La chambre est prête : le sommeil revient.' },
+      { kind: 'setFlag', flag: 'age2.flag.bedroomComplete', value: true },
+      { kind: 'setFlag', flag: 'game.flag.sleepUnlocked', value: true },
+    ],
     choices: [
       {
         id: 'enterAge2',
@@ -183,7 +183,7 @@ export const age1Events: EventType[] = [
           {
             kind: 'log',
             message:
-              'Vous quittez la chambre. La maison, plus vaste, vous attend — et, au-delà, ceux qui n’ont pas encore reçu votre message.',
+              'Vous quittez la chambre. La maison, plus vaste, vous attend. Au-delà, ceux qui n’ont pas encore reçu votre message.',
           },
         ],
       },

@@ -288,6 +288,7 @@ export function applyGameSnapshot(data: GameSnapshotV1): void {
   resourceStore.getResourceRates()
   resourceStore.recomputeResourceCaps()
   gaugeStore.getGaugeRates()
+  gaugeStore.recomputeGaugeCaps()
   improvementStore.updateImprovementVisibility()
   activityStore.updateActivityVisibility()
   resourceStore.recomputeVisibility()

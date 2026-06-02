@@ -9,6 +9,7 @@ export const age2Improvements: ImprovementType[] = [
     buildTime: 12,
     isBought: false,
     isVisible: false,
+    isShown: true,
     conditions: { requiredImprovement: 'age1.improvement.getToEra2' },
     costs: [
       { resourceSlug: 'age1.resource.wood', quantity: 20 },
@@ -141,5 +142,53 @@ export const age2Improvements: ImprovementType[] = [
       },
     ],
     flavourText: 'Boue, fibre, tuyère, soufflet . La recette prend enfin corps dans l’atelier.',
+  },
+  {
+    slug: 'age2.improvement.furnishBedroom',
+    name: 'Aménager le lit',
+    category: 'reconstruction',
+    sortOrder: 8,
+    linkedRoomId: 'age2.room.bedroom',
+    buildTime: 14,
+    isBought: false,
+    isVisible: false,
+    isShown: true,
+    conditions: { requiredFlag: 'age2.flag.bedroomComplete' },
+    costs: [
+      { resourceSlug: 'age1.resource.wood', quantity: 20 },
+      { resourceSlug: 'age1.resource.cloth', quantity: 12 },
+    ],
+    effects: [
+      { kind: 'gaugeMaxBonus', gaugeSlug: 'health', amount: 25 },
+      {
+        kind: 'log',
+        message: 'Le lit est prêt : votre vitalité maximale augmente.',
+      },
+    ],
+    flavourText: 'Matelas, couvertures, oreiller. Le corps retrouve un vrai repos.',
+  },
+  {
+    slug: 'age2.improvement.furnishBathroom',
+    name: 'Aménager les bains',
+    category: 'reconstruction',
+    sortOrder: 9,
+    linkedRoomId: 'age2.room.bathroom',
+    buildTime: 12,
+    isBought: false,
+    isVisible: false,
+    isShown: true,
+    conditions: { requiredFlag: 'age2.flag.bathroomComplete' },
+    costs: [
+      { resourceSlug: 'age1.resource.stone', quantity: 18 },
+      { resourceSlug: 'age2.resource.water', quantity: 15 },
+    ],
+    effects: [
+      { kind: 'gaugeMaxBonus', gaugeSlug: 'stamina', amount: 20 },
+      {
+        kind: 'log',
+        message: 'Les bains sont équipés : votre endurance maximale augmente.',
+      },
+    ],
+    flavourText: 'Cuve, seau, brasse. L’effort dure un peu plus longtemps.',
   },
 ]

@@ -137,6 +137,10 @@ export function applyEffects(
       case 'resourceMaxBonus':
         // Passive: read continuously by getResourceMaxBonus, not applied here.
         break
+      case 'gaugeRate':
+        break
+      case 'gaugeMaxBonus':
+        break
     }
   }
 }
@@ -174,6 +178,23 @@ export function getResourceMaxBonus(
     if (!imp.isBought || !imp.effects) continue
     for (const effect of imp.effects) {
       if (effect.kind === 'resourceMaxBonus' && effect.resourceSlug === resourceSlug) {
+        total += effect.amount
+      }
+    }
+  }
+  return total
+}
+
+/** Somme des bonus `gaugeMaxBonus` des améliorations achetées. */
+export function getGaugeMaxBonus(
+  improvements: readonly ImprovementType[],
+  gaugeSlug: string,
+): number {
+  let total = 0
+  for (const imp of improvements) {
+    if (!imp.isBought || !imp.effects) continue
+    for (const effect of imp.effects) {
+      if (effect.kind === 'gaugeMaxBonus' && effect.gaugeSlug === gaugeSlug) {
         total += effect.amount
       }
     }

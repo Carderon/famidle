@@ -1,5 +1,7 @@
 # Logs (dossier racine uniquement — ne pas ignorer src/data/logs/)
 /logs/
+/docs/
+/src/assets/**/README.md
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -33,12 +35,3 @@ coverage
 *.sw?
 
 *.tsbuildinfo
-
-# MD
-ARCHITECTURE.md
-BRIEF.md
-CODEBASE_GUIDE.md
-README.md
-CHECKLIST-FEATURE.md
-TODO.md
-SMOKE-TEST-ERA2.md

@@ -76,7 +76,7 @@ export const age2Events: EventType[] = [
     title: 'Le laboratoire est prêt',
     description:
       'Les vitrines tiennent, les alambics sont à leur place. Enfin un endroit où extraire ce qui brille encore sous la poussière.',
-    trigger: { kind: 'counter', counter: 'age2.counter.laboratoryTilesRepaired', atLeast: 6 },
+    trigger: { kind: 'counter', counter: 'age2.counter.laboratoryTilesRepaired', atLeast: 8 },
     minEra: 2,
     effects: [
       {

@@ -30,16 +30,34 @@ export const useClockStore = defineStore('clock', () => {
   // ---------------------------------------------------------------------------
   // État réactif (consommé par les vues et par les stores synchronisés sur le tick)
   // ---------------------------------------------------------------------------
+  /** Temps sim cumulé (s) — mis à jour ~20×/s (`GAME_TICK_INTERVAL_SEC`). */
   const elapsed = ref(0)
+  /** Compteur de ticks gameplay depuis le départ. */
   const tick = ref(0)
+  /**
+   * Compteur de signaux redessin UI (~10×/s).
+   * Les composants font `void uiTicksCount.value` dans un computed pour
+   * recalculer barres / cooldowns sans lier tout l’écran au tick sim.
+   */
+  const uiTicksCount = ref(0)
   const isRunning = ref(false)
   const isPaused = ref(false)
+
+  /** Intervalle tick gameplay (s) : 20 / s au lieu d’~60. */
+  const GAME_TICK_INTERVAL_SEC = 0.05
+  /** Intervalle signal redessin UI (s) : ~10 / s. */
+  const UI_REDRAW_INTERVAL_SEC = 0.1
 
   // ---------------------------------------------------------------------------
   // Moteur (une seule instance pour toute l’application)
   // ---------------------------------------------------------------------------
   const engine = new ClockEngine({
-    maxDeltaTime: { isEnabled: true, maxSeconds: 0.25 }, // évite les sauts énormes si l’onglet est en arrière-plan
+    maxDeltaTime: { isEnabled: true, maxSeconds: 0.25 },
+    gameTickIntervalSeconds: GAME_TICK_INTERVAL_SEC,
+    uiRedrawIntervalSeconds: UI_REDRAW_INTERVAL_SEC,
+    onUiRedraw: () => {
+      uiTicksCount.value += 1
+    },
   })
 
   // ---------------------------------------------------------------------------
@@ -62,7 +80,7 @@ export const useClockStore = defineStore('clock', () => {
   // ---------------------------------------------------------------------------
   // Systèmes enregistrés sur le moteur
   //
-  // Règle : l’ordre d’enregistrement est l’ordre d’appel de `onTick` à chaque frame.
+  // Règle : l’ordre d’enregistrement est l’ordre d’appel de `onTick` à chaque pas sim (~20 Hz).
   // 1) Publier le temps sim et les compteurs UI — avant le gameplay qui peut les lire.
   // 2) Événements, ressources, jauges — logique continue du tick.
   // ---------------------------------------------------------------------------
@@ -165,6 +183,7 @@ export const useClockStore = defineStore('clock', () => {
     isPaused.value = false
     elapsed.value = 0
     tick.value = 0
+    uiTicksCount.value = 0
     clearScheduledSimActions()
     zeroSimTimeInStores()
   }
@@ -197,6 +216,7 @@ export const useClockStore = defineStore('clock', () => {
   return {
     elapsed,
     tick,
+    uiTicksCount,
     isRunning,
     isPaused,
     start,

@@ -3,6 +3,7 @@ import type { ActivityType } from '@/types/ActivityType'
 /**
  * Activités âge 1 (BRIEF) — déclaratif : coûts, conditions, cooldown, effets.
  */
+export const AGE1_SCAVENGE_MAX_USES = 22
 export const age1Activities: ActivityType[] = [
   {
     slug: 'age1.activity.gatherWood',
@@ -36,6 +37,12 @@ export const age1Activities: ActivityType[] = [
     ],
     isVisible: false,
   },
+  /**
+   * Fouilles « crassier » avant épuisement.
+   *
+   * Chambre âge 1 : 100 tissu (8×10 + 20 au centre), +5 par fouille → 20 tours minimum
+   * sans le bonus de `age1.event.scavengeDiscovery`. Marge +2 pour une marge de stock.
+   */
   {
     slug: 'age1.activity.scavenge',
     name: 'Fouiller',
@@ -45,10 +52,18 @@ export const age1Activities: ActivityType[] = [
     flavourText: 'Le crassier et la friche recèlent parfois des chutes de tissu.',
     cooldownSeconds: 8,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 6 }],
-    conditions: { requiredFlag: 'ui.flag.activityShown', maxEra: 1 },
+    conditions: {
+      requiredFlag: 'ui.flag.activityShown',
+      hiddenWhenFlag: 'age1.flag.scavengeDepleted',
+      hiddenWhenCounterAtLeast: {
+        name: 'age1.counter.scavengeUses',
+        atLeast: AGE1_SCAVENGE_MAX_USES,
+      },
+    },
     effects: [
       { kind: 'addResource', resourceSlug: 'age1.resource.cloth', amount: 5 },
       { kind: 'setFlag', flag: 'age1.flag.firstScavengeDone', value: true },
+      { kind: 'incrementCounter', counter: 'age1.counter.scavengeUses' },
       { kind: 'logOnce', message: 'Vous fouillez le crassier et récupérez du tissu.' },
     ],
     isVisible: false,
@@ -59,7 +74,7 @@ export const age1Activities: ActivityType[] = [
     category: 'rest',
     sortOrder: 10,
     kind: 'instant',
-    flavourText: "Malgrés l'oeuvre en cours, vous finissez par vous reposer un peu.",
+    flavourText: "Malgré l'œuvre en cours, vous finissez par vous reposer un peu.",
     cooldownSeconds: 20,
     conditions: {
       requiredFlag: 'ui.flag.activityShown',
@@ -68,7 +83,7 @@ export const age1Activities: ActivityType[] = [
     effects: [
       { kind: 'addGauge', gaugeSlug: 'health', amount: 10 },
       { kind: 'addGauge', gaugeSlug: 'stamina', amount: 10 },
-      { kind: 'log', message: 'Vous vous reposez un peu. Le corps se détend.' },
+      { kind: 'logOnce', message: 'Vous vous reposez un peu. Le corps se détend.' },
     ],
     isVisible: false,
   },

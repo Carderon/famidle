@@ -93,6 +93,7 @@ export const useActivityStore = defineStore('activities', () => {
       addLog: (message, kind) => logStore.addLog(message, kind),
       setFlag: (flag, value) => gameState.setFlag(flag, value ?? true),
       getFlag: (flag) => gameState.getFlag(flag),
+      getCounter: (counter) => gameState.getCounter(counter),
       incrementCounter: (counter, by) => gameState.incrementCounter(counter, by),
       addResource: (slug, amount) => resourceStore.addResource(slug, amount),
       spendResource: (costs) => resourceStore.spendResource(costs),
@@ -272,7 +273,18 @@ export const useActivityStore = defineStore('activities', () => {
    * Après cooldown, si boucle active sans arrêt demandé : relance un cycle.
    * Si arrêt demandé et créneau libre + plus de cooldown : coupe la boucle.
    */
+  /** Au moins une activité timed en boucle auto (relance après cooldown). */
+  function hasActiveTimedAutoLoop(): boolean {
+    const enabled = timedRelaunchEnabled.value
+    for (const slug of Object.keys(enabled)) {
+      if (enabled[slug]) return true
+    }
+    return false
+  }
+
   function processTimedAutoRelaunch(): void {
+    if (!hasActiveTimedAutoLoop()) return
+
     const deps = buildDeps()
 
     for (const activity of activities.value) {
@@ -291,7 +303,10 @@ export const useActivityStore = defineStore('activities', () => {
       if (isOnCooldown(slug)) continue
       if (!meetsConditions(activity, deps)) continue
       if (!canAffordActivity(activity, deps)) continue
-      if (hasNoUsefulAdditiveGain(activity, deps)) continue
+      if (hasNoUsefulAdditiveGain(activity, deps)) {
+        clearRelaunchForSlug(slug)
+        continue
+      }
       if (runningTimedCount() >= MAX_CONCURRENT_TIMED_ACTIVITIES) continue
 
       if (tryPushTimedSlot(activity, deps)) {
@@ -329,12 +344,16 @@ export const useActivityStore = defineStore('activities', () => {
     updateActivityVisibility()
   }
 
-  /** Appelé à chaque tick du moteur (même référentiel que prod ressources / jauges). */
+  /** Appelé à chaque pas sim (~20 Hz) — même référentiel que prod ressources / jauges. */
   function applyGameTime(simElapsedSeconds: number) {
     gameTimeSim.value = simElapsedSeconds
     flushCompletedTimed()
-    abortTimedWithNoUsefulGain(buildDeps())
-    processTimedAutoRelaunch()
+    if (activeTimed.value.length > 0) {
+      abortTimedWithNoUsefulGain(buildDeps())
+    }
+    if (hasActiveTimedAutoLoop()) {
+      processTimedAutoRelaunch()
+    }
   }
 
   function isOnCooldown(slug: string): boolean {

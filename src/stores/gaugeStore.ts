@@ -1,8 +1,9 @@
 import { globalGauges } from '@/data/gauges/global'
-import type { GaugeType } from '@/types/GaugeType'
+import type { GaugeCostAffordanceLine, GaugeType } from '@/types/GaugeType'
+import type { GaugeCostBag } from '@/types/EventType'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { getGaugeMaxBonus } from '@/engines/improvements/improvementEngine'
+import { getGaugeMaxBonus, getGaugeRateBonus } from '@/engines/improvements/improvementEngine'
 import { useImprovementStore } from '@/stores/improvementStore'
 
 export const useGaugeStore = defineStore('gauge', () => {
@@ -13,14 +14,61 @@ export const useGaugeStore = defineStore('gauge', () => {
     })),
   )
 
-  const getGaugeMax = (gaugeSlug: string): number => {
-    return gauges.value.find((g) => g.slug === gaugeSlug)?.max ?? 0
+  const getGauge = (gaugeSlug: string) => gauges.value.find((g) => g.slug === gaugeSlug)
+
+  const getGaugeMax = (gaugeSlug: string): number => getGauge(gaugeSlug)?.max ?? 0
+
+  /** `true` si le panier contient au moins une jauge avec `quantity > 0`. */
+  const hasPositiveGaugeCosts = (costs: GaugeCostBag | undefined): boolean =>
+    !!costs?.some(({ quantity }) => quantity > 0)
+
+  /**
+   * `true` si les jauges couvrent tous les coûts demandés.
+   * Une entrée de `quantity <= 0` est ignorée.
+   * Un slug inconnu => coût impayable.
+   */
+  const canAfford = (costs: GaugeCostBag | undefined): boolean => {
+    if (!costs?.length) return true
+    for (const { gaugeSlug, quantity } of costs) {
+      if (quantity <= 0) continue
+      const gauge = getGauge(gaugeSlug)
+      if (!gauge || gauge.current < quantity) return false
+    }
+    return true
+  }
+
+  /**
+   * Détail affichage : chaque jauge du panier, payabilité ligne par ligne.
+   * Agrège les doublons de slug. Pour tooltips / panneaux — pas pour la logique gameplay (`canAfford`).
+   */
+  const getGaugeCostAffordance = (costs: GaugeCostBag | undefined): GaugeCostAffordanceLine[] => {
+    if (!costs?.length) return []
+
+    const totals = new Map<string, number>()
+    for (const { gaugeSlug, quantity } of costs) {
+      if (quantity <= 0) continue
+      totals.set(gaugeSlug, (totals.get(gaugeSlug) ?? 0) + quantity)
+    }
+
+    const lines: GaugeCostAffordanceLine[] = []
+    for (const [gaugeSlug, quantity] of totals) {
+      const gauge = getGauge(gaugeSlug)
+      const owned = gauge?.current ?? 0
+      lines.push({
+        gaugeSlug,
+        quantity,
+        owned,
+        canAfford: gauge != null && owned >= quantity,
+      })
+    }
+    return lines
   }
 
   const getGaugeRates = () => {
+    const improvements = useImprovementStore().improvements
     gauges.value.forEach((gauge) => {
-      const improvementEffect = 0
-      gauge.finalRegenRate = gauge.regenRate + improvementEffect
+      const bonus = getGaugeRateBonus(improvements, gauge.slug)
+      gauge.finalRegenRate = gauge.regenRate + bonus
     })
   }
 
@@ -36,9 +84,7 @@ export const useGaugeStore = defineStore('gauge', () => {
     })
   }
 
-  const getGaugeQuantity = (gaugeSlug: string): number => {
-    return gauges.value.find((g) => g.slug === gaugeSlug)?.current ?? 0
-  }
+  const getGaugeQuantity = (gaugeSlug: string): number => getGauge(gaugeSlug)?.current ?? 0
 
   const updateGauge = (gaugeSlug: string, amount: number) => {
     const gauge = gauges.value.find((g) => g.slug === gaugeSlug)
@@ -75,8 +121,12 @@ export const useGaugeStore = defineStore('gauge', () => {
 
   return {
     gauges,
+    getGauge,
     getGaugeRates,
     recomputeGaugeCaps,
+    hasPositiveGaugeCosts,
+    canAfford,
+    getGaugeCostAffordance,
     getGaugeQuantity,
     updateGauge,
     addGauge,

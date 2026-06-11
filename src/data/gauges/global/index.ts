@@ -4,8 +4,8 @@ export const globalGauges: GaugeType[] = [
   {
     name: 'Vitalité',
     slug: 'health',
-    current: 100,
-    max: 100,
+    current: 50,
+    max: 50,
     regenRate: 0.5,
     finalRegenRate: 0,
     flavourText: 'Énergie vitale, le néant vaut la mort',
@@ -14,8 +14,8 @@ export const globalGauges: GaugeType[] = [
   {
     name: 'Endurance',
     slug: 'stamina',
-    current: 50,
-    max: 50,
+    current: 25,
+    max: 25,
     regenRate: 0.2,
     finalRegenRate: 0,
     flavourText: 'Énergie musculaire, le néant vaut le manque de souffle',

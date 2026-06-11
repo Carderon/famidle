@@ -1,6 +1,18 @@
 import type { Tile, TileCost } from '@/types/MonumentType'
 import { playableTile } from '@/data/monuments/tilePresets'
 
+const BASE_COST: TileCost = [
+  { resourceSlug: 'age1.resource.wood', quantity: 10 },
+  { resourceSlug: 'age1.resource.stone', quantity: 10 },
+  { resourceSlug: 'age1.resource.cloth', quantity: 10 },
+]
+
+const CENTER_COST: TileCost = [
+  { resourceSlug: 'age1.resource.wood', quantity: 20 },
+  { resourceSlug: 'age1.resource.stone', quantity: 20 },
+  { resourceSlug: 'age1.resource.cloth', quantity: 20 },
+]
+
 /**
  * Chambre — âge 1
  *
@@ -14,18 +26,6 @@ import { playableTile } from '@/data/monuments/tilePresets'
  *   `import br01 from '@/assets/buildings/age1/bedroom/broken/tile-01.png?url'`
  *   puis `backgrounds: { broken: br01, ready: rd01 }`.
  */
-
-const BASE_COST: TileCost = [
-  { resourceSlug: 'age1.resource.wood', quantity: 10 },
-  { resourceSlug: 'age1.resource.stone', quantity: 10 },
-  { resourceSlug: 'age1.resource.cloth', quantity: 10 },
-]
-
-const CENTER_COST: TileCost = [
-  { resourceSlug: 'age1.resource.wood', quantity: 20 },
-  { resourceSlug: 'age1.resource.stone', quantity: 20 },
-  { resourceSlug: 'age1.resource.cloth', quantity: 20 },
-]
 
 import br01 from '@/assets/monuments/age1/bedroom/broken/tile-01.png?url'
 import br02 from '@/assets/monuments/age1/bedroom/broken/tile-02.png?url'

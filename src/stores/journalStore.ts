@@ -22,10 +22,10 @@ export const useJournalStore = defineStore('journal', () => {
   const clockStore = useClockStore()
   const characterStore = useCharacterStore()
   const gameState = useGameStateStore()
-  const { elapsed, tick } = storeToRefs(clockStore)
+  const { elapsed, tick, uiTicksCount } = storeToRefs(clockStore)
 
   const unlockedEntries = computed((): JournalEntry[] => {
-    void tick.value
+    void uiTicksCount.value
     const era = characterStore.getActiveCharacter()?.era ?? 0
     const ctx = { elapsed: elapsed.value, tick: tick.value, deltaTime: 0 }
     const deps = {

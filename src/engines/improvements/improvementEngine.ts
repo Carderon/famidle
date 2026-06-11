@@ -68,7 +68,11 @@ export function meetsConditions(
 
   if (c.requiredImprovement && !deps.isImprovementBought(c.requiredImprovement)) return false
 
-  if (c.requiredFlag && !deps.getFlag(c.requiredFlag)) return false
+  if (c.requiredFlags) {
+    for (const flag of c.requiredFlags) {
+      if (!deps.getFlag(flag)) return false
+    }
+  }
 
   return true
 }
@@ -101,10 +105,9 @@ export function spendImprovementCosts(
 /**
  * Apply the **one-shot** effects of an improvement.
  *
- * Called once, at the moment of purchase. Passive effects (like `resourceRate`)
- * are intentionally ignored here: they're computed on demand by
- * `getResourceRateBonus` so they remain active for as long as the improvement
- * is bought (and would stop applying if it were ever sold/disabled).
+ * Called once, at the moment of purchase. Passive effects (like `resourceRate`,
+ * `gaugeRate`, `resourceMaxBonus`, `gaugeMaxBonus`) are intentionally ignored
+ * here: they're computed on demand by the matching `get*Bonus` helpers.
  */
 export function applyEffects(
   effects: readonly ImprovementEffectType[] | undefined,
@@ -138,6 +141,7 @@ export function applyEffects(
         // Passive: read continuously by getResourceMaxBonus, not applied here.
         break
       case 'gaugeRate':
+        // Passive: read continuously by getGaugeRateBonus, not applied here.
         break
       case 'gaugeMaxBonus':
         break
@@ -178,6 +182,23 @@ export function getResourceMaxBonus(
     if (!imp.isBought || !imp.effects) continue
     for (const effect of imp.effects) {
       if (effect.kind === 'resourceMaxBonus' && effect.resourceSlug === resourceSlug) {
+        total += effect.amount
+      }
+    }
+  }
+  return total
+}
+
+/** Somme des bonus `gaugeRate` des améliorations achetées. */
+export function getGaugeRateBonus(
+  improvements: readonly ImprovementType[],
+  gaugeSlug: string,
+): number {
+  let total = 0
+  for (const imp of improvements) {
+    if (!imp.isBought || !imp.effects) continue
+    for (const effect of imp.effects) {
+      if (effect.kind === 'gaugeRate' && effect.gaugeSlug === gaugeSlug) {
         total += effect.amount
       }
     }

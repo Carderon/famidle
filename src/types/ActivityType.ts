@@ -61,6 +61,8 @@ export interface ActivityConditionType {
   requiredFlag?: string
   /** Si ce flag est `true`, l’activité reste masquée (ex. cacher « Se reposer » quand « Dormir » est débloqué). */
   hiddenWhenFlag?: string
+  /** Masque l’activité quand le compteur atteint `atLeast` (ex. crassier épuisé). */
+  hiddenWhenCounterAtLeast?: { name: string; atLeast: number }
   /** Ère minimale du personnage actif (`era >= minEra`). */
   minEra?: number
   /** Ère maximale du personnage actif (`era <= maxEra`). */

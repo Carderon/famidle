@@ -35,6 +35,7 @@ export interface ActivityEngineDeps {
   addLog: AddLogFn
   setFlag: (flag: string, value?: boolean) => void
   getFlag: (flag: string) => boolean
+  getCounter: (counter: string) => number
   incrementCounter: (counter: string, by?: number) => void
   addResource: (slug: string, amount: number) => void
   spendResource: (costs: ResourceCostBag) => boolean
@@ -71,6 +72,7 @@ export function meetsConditions(
     | 'getResourceQuantity'
     | 'isImprovementBought'
     | 'getFlag'
+    | 'getCounter'
     | 'getCharacterEra'
   >,
 ): boolean {
@@ -79,6 +81,12 @@ export function meetsConditions(
 
   if (c.requiredFlag && !deps.getFlag(c.requiredFlag)) return false
   if (c.hiddenWhenFlag && deps.getFlag(c.hiddenWhenFlag)) return false
+  if (
+    c.hiddenWhenCounterAtLeast &&
+    deps.getCounter(c.hiddenWhenCounterAtLeast.name) >= c.hiddenWhenCounterAtLeast.atLeast
+  ) {
+    return false
+  }
   if (c.requiredClass && deps.getCharacterClass() !== c.requiredClass) return false
   if (c.requiredSpecialization && deps.getCharacterSpecialization() !== c.requiredSpecialization) {
     return false

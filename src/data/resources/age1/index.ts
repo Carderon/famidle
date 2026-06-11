@@ -30,7 +30,7 @@ export const age1Resources: ResourceType[] = [
     baseRate: 0,
     max: 25,
     finalRate: 0,
-    flavourText: 'Déchiré, poussiéreux — mais encore utile.',
+    flavourText: 'Déchiré, poussiéreux, mais encore utile.',
     conditions: {},
     isVisible: true,
   },

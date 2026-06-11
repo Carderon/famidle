@@ -17,15 +17,14 @@
             <span v-if="choice.description" class="mt-1 block text-sm opacity-80">
               {{ choice.description }}
             </span>
-            <span v-if="choice.costs && hasAnyResourceCost(choice.costs)"
-              class="mt-2 block text-xs uppercase tracking-wider"
-              :class="eventStore.isChoiceAffordable(choice) ? 'text-amber-300' : 'text-red-300'">
-              Coût : {{ formatResourceCosts(choice.costs) }}
+            <span v-if="choice.costs && resourceStore.hasPositiveResourceCosts(choice.costs)"
+              class="mt-2 block text-xs uppercase tracking-wider">
+              Coût :
+              <ResourceCostLines :costs="choice.costs" />
             </span>
-            <span v-if="choice.gaugeCosts && hasAnyGaugeCost(choice.gaugeCosts)"
-              class="mt-1 block text-xs uppercase tracking-wider"
-              :class="eventStore.isChoiceAffordable(choice) ? 'text-amber-300' : 'text-red-300'">
-              Coût jauges : {{ formatGaugeCosts(choice.gaugeCosts) }}
+            <span v-if="choice.gaugeCosts && gaugeStore.hasPositiveGaugeCosts(choice.gaugeCosts)"
+              class="mt-1 block text-xs tracking-wider">
+              <GaugeCostLines :costs="choice.gaugeCosts" />
             </span>
           </button>
         </div>
@@ -39,13 +38,18 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useEventStore } from '@/stores/eventStore'
 import { useCharacterStore } from '@/stores/characterStore'
-import type { EventChoice, GaugeCostBag } from '@/types/EventType'
-import type { ResourceCostBag } from '@/types/ResourceType'
+import type { EventChoice } from '@/types/EventType'
+import GaugeCostLines from '@/components/ui/GaugeCostLines.vue'
+import ResourceCostLines from '@/components/ui/ResourceCostLines.vue'
+import { useGaugeStore } from '@/stores/gaugeStore'
+import { useResourceStore } from '@/stores/resourceStore'
 
 defineOptions({ name: 'EventPanel' })
 
 const eventStore = useEventStore()
 const characterStore = useCharacterStore()
+const resourceStore = useResourceStore()
+const gaugeStore = useGaugeStore()
 const { activeEvent } = storeToRefs(eventStore)
 
 const visibleChoices = computed<EventChoice[]>(() => {
@@ -54,36 +58,6 @@ const visibleChoices = computed<EventChoice[]>(() => {
   const cls = characterStore.getActiveCharacter()?.classType
   return ev.choices.filter((c) => !c.requiresClass || c.requiresClass === cls)
 })
-
-function hasAnyResourceCost(costs: ResourceCostBag): boolean {
-  return costs.some(({ quantity }) => quantity > 0)
-}
-
-function formatResourceCosts(costs: ResourceCostBag): string {
-  return costs
-    .filter(({ quantity }) => quantity > 0)
-    .map(({ resourceSlug, quantity }) => `${quantity} ${resourceSlug}`)
-    .join(', ')
-}
-
-function hasAnyGaugeCost(costs: GaugeCostBag): boolean {
-  return costs.some(({ quantity }) => quantity > 0)
-}
-
-const gaugeLabels: Record<string, string> = {
-  health: 'vitalité',
-  stamina: 'endurance',
-}
-
-function formatGaugeCosts(costs: GaugeCostBag): string {
-  return costs
-    .filter(({ quantity }) => quantity > 0)
-    .map(
-      ({ gaugeSlug, quantity }) =>
-        `${quantity} ${gaugeLabels[gaugeSlug] ?? gaugeSlug}`,
-    )
-    .join(', ')
-}
 
 function onChoose(choiceId: string) {
   if (!activeEvent.value) return

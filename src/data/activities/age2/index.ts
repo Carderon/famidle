@@ -57,7 +57,7 @@ export const age2Activities: ActivityType[] = [
     category: 'gather',
     sortOrder: 30,
     kind: 'instant',
-    flavourText: 'La corde grince ; l’eau monte lentement — pas de convoi, pas de hâte.',
+    flavourText: 'La corde grince ; l’eau monte lentement, sans hâte.',
     cooldownSeconds: 12,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 5 }],
     conditions: { requiredFlag: 'age2.flag.waterUnlocked', minEra: 2 },
@@ -73,7 +73,7 @@ export const age2Activities: ActivityType[] = [
     category: 'gather',
     sortOrder: 40,
     kind: 'instant',
-    flavourText: 'Couper, sécher, trier — un geste répété, sans la lenteur des voyages de convoi.',
+    flavourText: 'Couper, sécher, trier, un geste qui use vos mains.',
     cooldownSeconds: 10,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 5 }],
     conditions: { requiredFlag: 'age2.flag.canGatherPlantFiber', minEra: 2 },
@@ -93,14 +93,18 @@ export const age2Activities: ActivityType[] = [
     durationSeconds: 16,
     cooldownSeconds: 6,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 5 }],
+    costs: [
+      { resourceSlug: 'age2.resource.plantFiber', quantity: 4 },
+      { resourceSlug: 'age2.resource.water', quantity: 2 },
+    ],
     conditions: { requiredFlag: 'age2.flag.canGatherCloth', minEra: 2 },
     timedStatus: {
       ongoing: 'Les fils courent sur le métier.',
-      looping: 'En cours — plusieurs rouleaux d’affilée. Recliquer pour s’arrêter après le prochain.',
+      looping: 'En cours, plusieurs rouleaux d’affilée.',
       stopPending: 'Dernier rouleau, puis le métier s’arrête.',
     },
     effects: [
-      { kind: 'addResource', resourceSlug: 'age1.resource.cloth', amount: 12 },
+      { kind: 'addResource', resourceSlug: 'age1.resource.cloth', amount: 6 },
       { kind: 'logOnce', message: 'Un rouleau de tissu sort du métier.' },
     ],
     isVisible: false,
@@ -111,8 +115,7 @@ export const age2Activities: ActivityType[] = [
     category: 'gather',
     sortOrder: 45,
     kind: 'instant',
-    flavourText:
-      'Chaleur, souffle, patience — rare et fragile ; pas de convoi, pas de production de masse.',
+    flavourText: 'Chaleur, souffle, patience, rare et fragile',
     cooldownSeconds: 22,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 6 }],
     costs: [
@@ -134,7 +137,7 @@ export const age2Activities: ActivityType[] = [
     sortOrder: 50,
     kind: 'instant',
     flavourText:
-      'Lent, méticuleux, sans filet — chaque éclat compte ; on ne précipite pas ce genre de trouvaille.',
+      'Lent, méticuleux, sans filet, chaque éclat compte ; on ne précipite pas ce genre de trouvaille.',
     cooldownSeconds: 36,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 7 }],
     costs: [
@@ -145,7 +148,7 @@ export const age2Activities: ActivityType[] = [
     conditions: { requiredFlag: 'age2.flag.canGatherCrystal', minEra: 2 },
     effects: [
       { kind: 'addResource', resourceSlug: 'age2.resource.crystal', amount: 2 },
-      { kind: 'logOnce', message: 'Quelques cristaux sortent du creuset — rares et nets.' },
+      { kind: 'logOnce', message: 'Quelques cristaux sortent du creuset, rares et nets.' },
     ],
     isVisible: false,
   },

@@ -9,6 +9,7 @@ export const age1Improvements: ImprovementType[] = [
     buildTime: 10,
     isBought: false,
     isVisible: false,
+    conditions: { requiredFlags: ['age1.flag.awake'] },
     effects: [
       { kind: 'setFlag', flag: 'ui.flag.badgesShown' },
       { kind: 'setFlag', flag: 'age1.flag.firecampLit' },
@@ -16,17 +17,16 @@ export const age1Improvements: ImprovementType[] = [
     ],
     costs: [{ resourceSlug: 'age1.resource.wood', quantity: 1 }],
     flavourText:
-      'La première flamme ne chauffe pas que les mains — elle fixe un point dans le noir.',
+      'La première flamme ne chauffe pas que les mains, elle fixe un point dans le noir.',
   },
   {
     slug: 'age1.improvement.remember',
     name: 'Se rappeler',
     category: 'introspection',
     sortOrder: 20,
-    buildTime: 5,
+    buildTime: 2,
     isVisible: false,
     effects: [
-      { kind: 'setFlag', flag: 'ui.flag.logsShown' },
       {
         kind: 'log',
         message:
@@ -42,7 +42,7 @@ export const age1Improvements: ImprovementType[] = [
     name: "S'ausculter",
     category: 'introspection',
     sortOrder: 30,
-    buildTime: 5,
+    buildTime: 2,
     isVisible: false,
     conditions: { requiredImprovement: 'age1.improvement.remember' },
     effects: [
@@ -57,7 +57,7 @@ export const age1Improvements: ImprovementType[] = [
     name: "Faire l'état des lieux",
     category: 'reconstruction',
     sortOrder: 10,
-    buildTime: 5,
+    buildTime: 2,
     isVisible: false,
     conditions: { requiredImprovement: 'age1.improvement.checkout' },
     effects: [
@@ -72,12 +72,12 @@ export const age1Improvements: ImprovementType[] = [
     name: 'Mesurer les dégâts',
     category: 'reconstruction',
     sortOrder: 20,
-    buildTime: 5,
+    buildTime: 2,
     isVisible: false,
     conditions: { requiredImprovement: 'age1.improvement.take-stock' },
     effects: [
       { kind: 'setFlag', flag: 'ui.flag.monumentShown' },
-      { kind: 'log', message: 'Tout a été retournée, brisée, ou détruit.' },
+      { kind: 'log', message: 'Tout a été retourné, brisé ou détruit.' },
     ],
     isBought: false,
     flavourText: 'Ce n’est pas seulement une chambre : une maison entière a été retournée.',
@@ -87,7 +87,7 @@ export const age1Improvements: ImprovementType[] = [
     name: 'Une raison de continuer',
     category: 'reconstruction',
     sortOrder: 30,
-    buildTime: 5,
+    buildTime: 2,
     isVisible: false,
     conditions: { requiredImprovement: 'age1.improvement.take-a-look' },
     effects: [
@@ -106,8 +106,16 @@ export const age1Improvements: ImprovementType[] = [
     importance: 'milestone',
     buildTime: 5,
     isVisible: false,
-    conditions: { requiredFlag: 'age1.flag.era1Complete' },
-    effects: [{ kind: 'setEra', era: 2 }],
+    conditions: { requiredFlags: ['age1.flag.era1Complete'] },
+    effects: [
+      {
+        kind: 'log',
+        message:
+          'La porte cède. L’air change, la maison s’ouvre sur plus de ruines, plus de travail, plus de doute.',
+      },
+      { kind: 'setFlag', flag: 'age2.flag.era2TransitionPending', value: true },
+      { kind: 'setEra', era: 2 },
+    ],
     isBought: false,
     flavourText:
       'La chambre tient debout. Dehors, la maison est encore en ruines, mais quelque part, on attend qu’un signe leur dise de revenir. Ce n’est plus seulement vous, ici.',

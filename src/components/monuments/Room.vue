@@ -1,7 +1,6 @@
 <template>
   <div>
-    <div v-if="imagesLoaded"
-      class="relative z-0 mx-auto grid w-max max-w-full gap-0 border border-gray-400 dark:border-gray-600"
+    <div v-if="imagesLoaded" class="relative z-0 mx-auto grid gap-0 border border-gray-400 dark:border-gray-600"
       :style="gridStyle">
       <template v-for="(row, y) in tiles" :key="y">
         <div v-for="(tile, x) in row" :key="`${x}-${y}`"
@@ -44,13 +43,8 @@
               <p class="text-sm font-semibold text-white">{{ tile.displayName ?? tile.id }}</p>
               <template v-if="tile.state !== 'ready'">
                 <p v-if="hasCost(tile)" class="mt-1 text-[11px]">
-                  Coût :
-                  <span :class="canAffordTile(tile) ? 'text-amber-200' : 'text-red-300'">
-                    {{ formatCost(tile) }}
-                  </span>
+                  <ResourceCostLines :costs="tile.repairCost" />
                 </p>
-                <p v-else class="mt-1 text-[11px]">Coût : gratuit</p>
-                <p class="mt-1 text-[11px] text-gray-300">Durée : {{ tileDurSeconds(tile) }}s</p>
                 <p v-if="isRepairing(tile.id)" class="mt-1 text-[11px] text-emerald-300">
                   Réparation en cours…
                 </p>
@@ -67,27 +61,29 @@
 
 <script setup lang="ts">
 import GameTooltip from '@/components/ui/GameTooltip.vue'
+import ResourceCostLines from '@/components/ui/ResourceCostLines.vue'
 import type { Tile } from '@/types/MonumentType'
 import { useClockStore } from '@/stores/clockStore'
-import { useResourceStore } from '@/stores/resourceStore'
 import { useMonumentStore } from '@/stores/monumentStore'
+import { useResourceStore } from '@/stores/resourceStore'
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
-/** Taille fixe des cases (px) — identique pour toutes les pièces / grilles. */
-const TILE_PX = 150
-
-defineOptions({ name: 'MonumentRoom' })
+const monumentStore = useMonumentStore()
+const resourceStore = useResourceStore()
+const clockStore = useClockStore()
+const { uiTicksCount } = storeToRefs(clockStore)
 
 const props = defineProps<{
   monumentId: string
   roomId: string
 }>()
 
-const monumentStore = useMonumentStore()
-const resourceStore = useResourceStore()
-const clockStore = useClockStore()
-const { tick } = storeToRefs(clockStore)
+/** Largeur totale max de la grille ; taille d’une case = min(plafond case, largeur / colonnes). */
+const ROOM_MAX_WIDTH_PX = 800
+const TILE_MAX_PX = 150
+
+defineOptions({ name: 'MonumentRoom' })
 
 const room = computed(() => monumentStore.getRoom(props.monumentId, props.roomId))
 const tiles = computed(() => room.value?.tiles || [])
@@ -98,31 +94,47 @@ const maxCols = computed(() => {
   return Math.max(1, ...rows.map((r) => r.length))
 })
 
-const gridStyle = computed(() => ({
-  gridTemplateColumns: `repeat(${maxCols.value}, ${TILE_PX}px)`,
-  gridAutoRows: `${TILE_PX}px`,
-}))
+/** Répartit la largeur sur les colonnes, sans dépasser 150px par case ni 800px au total. */
+const tilePx = computed(() => {
+  const cols = maxCols.value
+  if (cols <= 0) return TILE_MAX_PX
+  return Math.min(TILE_MAX_PX, ROOM_MAX_WIDTH_PX / cols)
+})
 
-const cellStyle = {
-  width: `${TILE_PX}px`,
-  height: `${TILE_PX}px`,
-  minWidth: `${TILE_PX}px`,
-  minHeight: `${TILE_PX}px`,
-}
+const gridStyle = computed(() => {
+  const size = tilePx.value
+  const width = maxCols.value * size
+  return {
+    gridTemplateColumns: `repeat(${maxCols.value}, ${size}px)`,
+    gridAutoRows: `${size}px`,
+    width: `${width}px`,
+    maxWidth: `${ROOM_MAX_WIDTH_PX}px`,
+  }
+})
+
+const cellStyle = computed(() => {
+  const size = `${tilePx.value}px`
+  return {
+    width: size,
+    height: size,
+    minWidth: size,
+    minHeight: size,
+  }
+})
 
 function isRepairing(tileId: string): boolean {
-  void tick.value
+  void uiTicksCount.value
   return monumentStore.isTileRepairing(tileId)
 }
 
 function repairProgressPct(tileId: string): number {
-  void tick.value
+  void uiTicksCount.value
   return monumentStore.getTileRepairProgress01(tileId) * 100
 }
 
 /** Fondu : ready apparaît avec p, cassé disparaît avec (1 − p). */
 function repairBlendReadyStyle(tile: Tile) {
-  void tick.value
+  void uiTicksCount.value
   const p = monumentStore.getTileRepairProgress01(tile.id)
   return {
     backgroundImage: `url(${tile.backgrounds.ready})`,
@@ -131,7 +143,7 @@ function repairBlendReadyStyle(tile: Tile) {
 }
 
 function repairBlendBrokenStyle(tile: Tile) {
-  void tick.value
+  void uiTicksCount.value
   const p = monumentStore.getTileRepairProgress01(tile.id)
   return {
     backgroundImage: `url(${tile.backgrounds.broken})`,
@@ -139,34 +151,13 @@ function repairBlendBrokenStyle(tile: Tile) {
   }
 }
 
-function tileDurSeconds(tile: Tile): number {
-  return tile.repairDurationSeconds != null && tile.repairDurationSeconds > 0 ? tile.repairDurationSeconds : 6
-}
-
 function hasCost(tile: Tile): boolean {
-  if (!tile.repairCost) return false
-  return tile.repairCost.some(({ quantity }) => quantity > 0)
-}
-
-function formatCost(tile: Tile): string {
-  if (!tile.repairCost) return ''
-  return tile.repairCost
-    .filter(({ quantity }) => quantity > 0)
-    .map(
-      ({ resourceSlug, quantity }) =>
-        `${quantity} ${resourceStore.getResource(resourceSlug)?.name ?? resourceSlug}`,
-    )
-    .join(', ')
-}
-
-function canAffordTile(tile: Tile): boolean {
-  if (!tile.repairCost || !hasCost(tile)) return true
-  return resourceStore.canAfford(tile.repairCost)
+  return resourceStore.hasPositiveResourceCosts(tile.repairCost)
 }
 
 /** Curseur / opacité sur la cellule entière (pas de hover:brightness ici). */
 function tileWrapperClass(tile: Tile) {
-  void tick.value
+  void uiTicksCount.value
   if (tile.isVoid) return ''
   if (tile.state === 'ready' && !isRepairing(tile.id)) return ''
   if (isRepairing(tile.id)) return 'cursor-wait'
@@ -189,35 +180,53 @@ function tileVisualHoverClass(tile: Tile) {
 
 function handleTileClick(tileId: string) {
   const tile = monumentStore.findTile(props.monumentId, props.roomId, tileId)
-  if (tile?.isVoid) return
+  if (!tile || tile.isVoid) return
   if (!monumentStore.canRepairTile(props.monumentId, props.roomId, tileId)) return
+  const secondary = tileSecondarySrc(tile)
+  if (secondary) void preloadImage(secondary)
   monumentStore.startRepairTile(props.monumentId, props.roomId, tileId)
 }
 
 const imagesLoaded = ref(false)
+const loadedSrc = new Set<string>()
+
+function preloadImage(src: string): Promise<void> {
+  if (loadedSrc.has(src)) return Promise.resolve()
+  return new Promise<void>((resolve) => {
+    const image = new Image()
+    image.onload = () => {
+      loadedSrc.add(src)
+      resolve()
+    }
+    image.onerror = () => resolve()
+    image.src = src
+  })
+}
+
+function tilePrimarySrc(tile: Tile): string {
+  if (tile.isVoid) return ''
+  return tile.state === 'ready' ? tile.backgrounds.ready : tile.backgrounds.broken
+}
+
+function tileSecondarySrc(tile: Tile): string | null {
+  if (tile.isVoid) return null
+  const secondary = tile.state === 'ready' ? tile.backgrounds.broken : tile.backgrounds.ready
+  return secondary !== tilePrimarySrc(tile) ? secondary : null
+}
 
 onMounted(() => {
-  const sources = tiles.value.flatMap((row) =>
-    row.flatMap((tile) => [tile.backgrounds.broken, tile.backgrounds.ready]),
-  )
+  const playable = tiles.value.flatMap((row) => row.filter((tile) => !tile.isVoid))
+  const primary = [...new Set(playable.map(tilePrimarySrc).filter(Boolean))]
+  const secondary = [...new Set(playable.map(tileSecondarySrc).filter((s): s is string => Boolean(s)))]
 
-  if (!sources.length) {
+  if (!primary.length) {
     imagesLoaded.value = true
     return
   }
 
-  const preload = sources.map(
-    (src) =>
-      new Promise<void>((resolve) => {
-        const image = new Image()
-        image.onload = () => resolve()
-        image.onerror = () => resolve()
-        image.src = src
-      }),
-  )
-
-  Promise.all(preload).then(() => {
+  Promise.all(primary.map(preloadImage)).then(() => {
     imagesLoaded.value = true
+    secondary.forEach((src) => void preloadImage(src))
   })
 })
 </script>

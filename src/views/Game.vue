@@ -20,27 +20,27 @@
         </div>
 
         <nav v-if="tabs.length && tabs.length > 1" class="mb-4 flex flex-wrap gap-2 border-b border-gray-400 relative">
-          <button v-for="tab in tabs" :key="tab.id" class="px-3 py-1 text-sm transition relative top-[1px]" :class="activeTab === tab.id
+          <button v-for="tab in tabs" :key="tab.id" class="relative px-3 py-1 text-sm transition top-[1px]" :class="activeTab === tab.id
             ? 'text-orange-500 border-b border-orange-500'
-            : 'text-black hover:text-orange-200 dark:text-white'
-            " @click="activeTab = tab.id">
+            : 'text-black hover:text-orange-200 dark:text-white'" @click="onTabClick(tab.id)">
             {{ tab.label }}
+            <NewDot v-if="tabHasNew(tab.id)" placement="tab" />
           </button>
         </nav>
 
-        <JournalPanel v-show="activeTab === 'journal'" />
+        <JournalPanel v-if="activeTab === 'journal'" />
 
-        <CharacterPanel v-show="activeTab === 'character'" />
+        <CharacterPanel v-if="activeTab === 'character'" />
 
-        <ActivityList v-show="activeTab === 'activities'" />
+        <ActivityList v-if="activeTab === 'activities'" />
 
-        <ImprovementList v-show="activeTab === 'improvements'" />
+        <ImprovementList v-if="activeTab === 'improvements'" />
 
-        <MonumentPanel v-show="activeTab === 'monument'" :monument-id="activeMonumentId" />
+        <MonumentPanel v-if="activeTab === 'monument'" :monument-id="activeMonumentId" />
 
-        <BuildingList v-show="activeTab === 'buildings'" />
+        <BuildingList v-if="activeTab === 'buildings'" />
 
-        <LogList v-show="activeTab === 'logs'" show-legend />
+        <LogList v-if="activeTab === 'logs'" show-legend />
 
         <Badge v-show="isBadgesShown" />
       </main>
@@ -59,6 +59,8 @@
 
 <script setup lang="ts">
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, watchEffect, ref } from 'vue';
+import NewDot from '@/components/ui/NewDot.vue';
+import { useNewContent } from '@/composables/useNewContent';
 import { storeToRefs } from 'pinia';
 
 import ResourceList from '@/components/ResourceList.vue';
@@ -95,6 +97,7 @@ const activeMonumentId = computed(() => {
 })
 const improvementStore = useImprovementStore();
 const activityStore = useActivityStore();
+const { unseenImprovementsCount, unseenActivitiesCount } = useNewContent();
 
 // Le ClockEngine est démarré ici (et arrêté à la sortie) pour que le temps
 // ne s'écoule que pendant la partie, pas dans le menu.
@@ -133,7 +136,17 @@ const tabs = computed<TabDef[]>(() => {
   return list
 })
 
-const activeTab = ref<CenterTabId>('activities')
+const activeTab = ref<CenterTabId>('improvements')
+
+function tabHasNew(tabId: CenterTabId): boolean {
+  if (tabId === 'improvements') return unseenImprovementsCount.value > 0
+  if (tabId === 'activities') return unseenActivitiesCount.value > 0
+  return false
+}
+
+function onTabClick(tabId: CenterTabId) {
+  activeTab.value = tabId
+}
 
 watchEffect(() => {
   // Keep the active tab valid when the UI unlocks/locks tabs.

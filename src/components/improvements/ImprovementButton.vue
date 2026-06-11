@@ -1,16 +1,17 @@
 <template>
-  <div class="relative group inline-block">
+  <div class="relative group inline-block" @mouseenter="markSeen">
+    <NewDot v-if="isNew" />
     <button type="button"
-      class="relative overflow-hidden rounded border px-2 py-1 text-white transition-all duration-100 disabled:cursor-not-allowed disabled:opacity-50"
+      class="relative overflow-hidden rounded border px-2 py-1 text-white transition-all duration-100 disabled:cursor-not-allowed"
       :class="buttonClasses" :disabled="isBuilding || !canBuy" @click="handleBuyImprovement(improvement.slug)">
       <span v-if="isMilestone"
         class="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-600/25 via-transparent to-amber-900/20"
         aria-hidden="true" />
       <span class="relative z-10 block" :class="isMilestone ? 'font-semibold tracking-wide' : ''">
-        {{ improvement.name }}
+        {{ improvement.label ?? improvement.name }}
       </span>
       <span v-show="isBuilding" :style="{ width: 100 - buildProgress + '%' }"
-        class="absolute top-0 left-0 z-[1] block h-full bg-white opacity-50 transition-all duration-100" />
+        class="absolute top-0 left-0 z-[1] block h-full bg-amber-400/45 transition-all duration-100" />
     </button>
 
     <GameTooltip placement="below">
@@ -24,22 +25,22 @@
         :class="isMilestone ? 'text-amber-50/95' : 'opacity-90'">
         {{ improvement.flavourText }}
       </p>
-      <p class="mt-2 text-[11px] opacity-95">Temps : {{ improvement.buildTime }}s</p>
-      <p v-if="hasCost" class="mt-1 text-[11px] opacity-95">Coût : {{ formattedCost }}</p>
-      <p v-if="formattedConditions" class="mt-1 text-[11px] opacity-80">
-        Conditions : {{ formattedConditions }}
+      <p v-if="hasCost && !isBuilding" class="mt-1 text-[11px]">
+        <ResourceCostLines :costs="improvement.costs" />
       </p>
-      <p v-if="formattedEffects" class="mt-1 text-[11px] opacity-80">Effets : {{ formattedEffects }}</p>
+      <p v-if="formattedEffects" class="mt-1 text-[11px] text-orange-400/95 italic">{{ formattedEffects }}</p>
     </GameTooltip>
   </div>
 </template>
 
 <script lang="ts" setup>
 import GameTooltip from '@/components/ui/GameTooltip.vue'
+import NewDot from '@/components/ui/NewDot.vue'
+import { useNewContent } from '@/composables/useNewContent'
+import ResourceCostLines from '@/components/ui/ResourceCostLines.vue'
 import { useImprovementStore } from '@/stores/improvementStore.ts'
 import {
   isMilestoneImprovement,
-  type ImprovementConditionType,
   type ImprovementEffectType,
   type ImprovementType,
 } from '@/types/ImprovementType'
@@ -53,9 +54,17 @@ defineOptions({ name: 'ImprovementButton' })
 const improvementStore = useImprovementStore()
 const resourceStore = useResourceStore()
 const clockStore = useClockStore()
-const { tick } = storeToRefs(clockStore)
+const { uiTicksCount } = storeToRefs(clockStore)
 
 const props = defineProps<{ improvement: ImprovementType }>()
+
+const { isImprovementNew, markImprovementSeen } = useNewContent()
+
+const isNew = computed(() => isImprovementNew(props.improvement.slug))
+
+function markSeen() {
+  markImprovementSeen(props.improvement.slug)
+}
 
 const isMilestone = computed(() => isMilestoneImprovement(props.improvement))
 
@@ -68,57 +77,27 @@ const buttonClasses = computed(() => {
       'disabled:hover:border-amber-400/75 disabled:hover:bg-neutral-800 disabled:hover:shadow-[0_0_12px_rgba(251,191,36,0.15)]',
     ].join(' ')
   }
-  return 'max-h-[32px] border-gray-400 bg-neutral-600 hover:bg-neutral-500 disabled:hover:bg-neutral-600'
+
+  if (!canBuy.value && !isBuilding.value) {
+    return 'max-h-[32px] border-gray-400 bg-neutral-600 disabled:cursor-not-allowed opacity-50'
+  }
+
+  return 'max-h-[32px] border-gray-400 bg-neutral-600 hover:bg-neutral-500'
 })
 
 const isBuilding = computed(() => {
-  void tick.value
+  void uiTicksCount.value
   return improvementStore.isPendingBuild(props.improvement.slug)
 })
 
 const buildProgress = computed(() => {
-  void tick.value
+  void uiTicksCount.value
   return improvementStore.getBuildProgress01(props.improvement.slug, props.improvement.buildTime) * 100
 })
 
 const canBuy = computed(() => improvementStore.canBuyImprovement(props.improvement.slug))
 
-const hasCost = computed(() => {
-  const costs = props.improvement.costs
-  if (!costs) return false
-  return costs.some(({ quantity }) => quantity > 0)
-})
-
-const formattedCost = computed(() => {
-  const costs = props.improvement.costs
-  if (!costs) return ''
-  return costs
-    .filter(({ quantity }) => quantity > 0)
-    .map(
-      ({ resourceSlug, quantity }) =>
-        `${quantity} ${resourceStore.getResource(resourceSlug)?.name ?? resourceSlug}`,
-    )
-    .join(', ')
-})
-
-function formatConditions(conditions: ImprovementConditionType | undefined): string {
-  if (!conditions) return ''
-  const parts: string[] = []
-  if (conditions.requiredClass) parts.push(`classe = ${conditions.requiredClass}`)
-  if (conditions.requiredSpecialization)
-    parts.push(`spécialisation = ${conditions.requiredSpecialization}`)
-  if (conditions.minLevel != null) parts.push(`niveau ≥ ${conditions.minLevel}`)
-  if (conditions.minResourceQuantity) {
-    for (const [slug, qty] of Object.entries(conditions.minResourceQuantity)) {
-      parts.push(`avoir ${qty} ${slug}`)
-    }
-  }
-  if (conditions.requiredImprovement)
-    parts.push(
-      `après ${improvementStore.getImprovement(conditions.requiredImprovement)?.name ?? conditions.requiredImprovement}`,
-    )
-  return parts.join(', ')
-}
+const hasCost = computed(() => resourceStore.hasPositiveResourceCosts(props.improvement.costs))
 
 function formatEffect(effect: ImprovementEffectType): string {
   switch (effect.kind) {
@@ -141,7 +120,6 @@ function formatEffect(effect: ImprovementEffectType): string {
   }
 }
 
-const formattedConditions = computed(() => formatConditions(props.improvement.conditions))
 const formattedEffects = computed(() =>
   (props.improvement.effects ?? []).map(formatEffect).filter((effect) => effect !== '').join(', '),
 )

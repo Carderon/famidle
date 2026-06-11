@@ -4,8 +4,11 @@ import { ref } from 'vue'
 import { useCharacterStore } from '@/stores/characterStore.ts'
 import { useActivityStore } from '@/stores/activityStore'
 import { useGameStateStore } from '@/stores/gameStateStore'
-import type { ResourceCostBag } from '@/types/ResourceType'
-import type { ResourceType } from '@/types/ResourceType'
+import type {
+  ResourceCostAffordanceLine,
+  ResourceCostBag,
+  ResourceType,
+} from '@/types/ResourceType'
 import { age1Resources } from '@/data/resources/age1'
 import { age2Resources } from '@/data/resources/age2'
 import { globalResources } from '@/data/resources/global'
@@ -46,6 +49,10 @@ export const useResourceStore = defineStore('resource', () => {
   /** Plafond effectif (base data + bonus d’améliorations). */
   const getResourceMax = (slug: string): number => getResource(slug)?.max ?? 0
 
+  /** `true` si le panier contient au moins une ressource avec `quantity > 0`. */
+  const hasPositiveResourceCosts = (costs: ResourceCostBag | undefined): boolean =>
+    !!costs?.some(({ quantity }) => quantity > 0)
+
   /**
    * `true` si l'inventaire couvre tous les coûts demandés.
    * Une entrée de `quantity <= 0` est ignorée (pratique pour des coûts conditionnels).
@@ -59,6 +66,36 @@ export const useResourceStore = defineStore('resource', () => {
       if (resource.quantity < quantity) return false
     }
     return true
+  }
+
+  /**
+   * Détail affichage : chaque ressource du panier, payabilité ligne par ligne.
+   * Agrège les doublons de slug (ex. deux lignes « bois » dans le même coût).
+   * À utiliser dans les tooltips / panneaux — pas pour la logique gameplay (`canAfford`).
+   */
+  const getResourceCostAffordance = (
+    costs: ResourceCostBag | undefined,
+  ): ResourceCostAffordanceLine[] => {
+    if (!costs?.length) return []
+
+    const totals = new Map<string, number>()
+    for (const { resourceSlug, quantity } of costs) {
+      if (quantity <= 0) continue
+      totals.set(resourceSlug, (totals.get(resourceSlug) ?? 0) + quantity)
+    }
+
+    const lines: ResourceCostAffordanceLine[] = []
+    for (const [resourceSlug, quantity] of totals) {
+      const resource = getResource(resourceSlug)
+      const owned = resource?.quantity ?? 0
+      lines.push({
+        resourceSlug,
+        quantity,
+        owned,
+        canAfford: resource != null && owned >= quantity,
+      })
+    }
+    return lines
   }
 
   // ---------- Mutations ----------
@@ -92,7 +129,10 @@ export const useResourceStore = defineStore('resource', () => {
   const updateResource = (resourceSlug: string, amount: number) => {
     const resource = getResource(resourceSlug)
     if (!resource) return
-    resource.quantity = Math.max(0, Math.min(resource.quantity + amount, getResourceMax(resourceSlug)))
+    resource.quantity = Math.max(
+      0,
+      Math.min(resource.quantity + amount, getResourceMax(resourceSlug)),
+    )
   }
 
   /**
@@ -204,7 +244,9 @@ export const useResourceStore = defineStore('resource', () => {
     getResource,
     getQuantity,
     getResourceMax,
+    hasPositiveResourceCosts,
     canAfford,
+    getResourceCostAffordance,
     addResource,
     spendResource,
     getResourceRates,

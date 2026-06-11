@@ -1,3 +1,11 @@
+/** Une ligne de coût jauge pour l’affichage (niveau actuel vs besoin). */
+export type GaugeCostAffordanceLine = {
+  gaugeSlug: string
+  quantity: number
+  owned: number
+  canAfford: boolean
+}
+
 export type GaugeType = {
   name: string
   slug: string

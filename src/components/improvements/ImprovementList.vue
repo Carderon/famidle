@@ -35,9 +35,9 @@
             <p v-if="item.roomLabel" class="mt-0.5 text-[10px] uppercase tracking-wide text-gray-400">
               {{ item.roomLabel }}
             </p>
-            <GameTooltip v-if="item.bonus" placement="below">
+            <GameTooltip v-if="item.bonus || item.flavourText" placement="below">
               <p class="text-[11px] italic text-white">{{ item.flavourText }}</p>
-              <p class="mt-1 text-[11px] text-amber-200/95">{{ item.bonus }}</p>
+              <p class="mt-1 text-[11px] italic text-orange-400/95">{{ item.bonus }}</p>
             </GameTooltip>
           </li>
         </ul>

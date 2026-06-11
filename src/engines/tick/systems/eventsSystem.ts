@@ -40,11 +40,20 @@ export interface EventsSystemDeps extends EventEngineDeps {
  */
 export function createEventsSystem(deps: EventsSystemDeps): TickSystem {
   const triggered = deps.onceFiredEventIds
+  let lastScanSecond = -1
 
   return {
     id: 'events',
 
+    onStart() {
+      lastScanSecond = -1
+    },
+
     onTick(ctx) {
+      const currentSecond = Math.floor(ctx.elapsed)
+      if (currentSecond === lastScanSecond) return
+      lastScanSecond = currentSecond
+
       const era = deps.getEra()
 
       const candidates = [...EventLoader.getEventsForAge(0), ...EventLoader.getEventsForAge(era)]

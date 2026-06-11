@@ -1,4 +1,5 @@
 import type { EventType } from '@/types/EventType'
+import { AGE1_SCAVENGE_MAX_USES } from '@/data/activities/age1'
 
 /**
  * Événements de l'âge 1.
@@ -13,27 +14,29 @@ import type { EventType } from '@/types/EventType'
  * - les effets ressources (`addResource`)
  */
 export const age1Events: EventType[] = [
-  // 1) Trigger temporel — l'event de réveil
+  {
+    id: 'age1.event.openingAmbiance',
+    trigger: { kind: 'time', atSeconds: 1 },
+    effects: [
+      {
+        kind: 'log',
+        message:
+          "Tu marches dans une forêt rouge, l'herbe est haute. Il vient de pleuvoir. La majeure partie du sang a été lavée. Il y a une ruine au loin, une cabane de bois. Tu y es déjà allé auparavant. Tu n'étais pas seul. Tu les connais, comme un souvenir de demain.",
+      },
+    ],
+  },
+
   {
     id: 'age1.event.wakeUp',
     trigger: { kind: 'time', atSeconds: 2 },
     effects: [
-      { kind: 'log', message: 'Tu te réveilles, derrière, le néant.' },
+      { kind: 'log', message: 'Tu te réveilles. Derrière, le néant.' },
       { kind: 'setFlag', flag: 'age1.flag.awake' },
-    ],
-  },
-
-  // 2) Trigger temporel — petit drop de bois pour amorcer l'économie
-  {
-    id: 'age1.event.firewoodHandful',
-    trigger: { kind: 'time', atSeconds: 4 },
-    effects: [
-      { kind: 'log', message: 'Un vieux fagot traîne dans la ruine, tu le ramasses' },
       { kind: 'addResource', resourceSlug: 'age1.resource.wood', amount: 1 },
     ],
   },
 
-  // 3) Trigger flag + choices payants — réagit au flag posé par l'achat de firecamp. Le faire apparaitre plus tard quand toutes l'UI est chargée
+  // Trigger flag + choices payants — réagit au flag posé par l'achat de firecamp
   {
     id: 'age1.event.firstNoise',
     title: 'Un bruit dans le couloir',
@@ -120,7 +123,7 @@ export const age1Events: EventType[] = [
         label: 'Ne rien faire',
         description: 'Le stress vous épuise un peu.',
         gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 6 }],
-        effects: [{ kind: 'log', message: 'Vous restez figé Le sommeil vous quitte mal.' }],
+        effects: [{ kind: 'log', message: 'Vous restez figé. Le sommeil vous quitte mal.' }],
       },
     ],
   },
@@ -159,13 +162,48 @@ export const age1Events: EventType[] = [
     ],
   },
 
+  /** Crassier épuisé — après le quota de fouilles (cabane finissable ; tissu ailleurs plus tard). */
+  {
+    id: 'age1.event.scavengeDepleted',
+    title: 'Le crassier est vide',
+    description:
+      "Vos mains ne trouvent plus que de la terre battue et des fils rompus. Comme si cette endroit avait déjà tout donné ici, et qu'il fallût accepter de chercher ailleurs, plus tard, quand la maison le permettra.",
+    trigger: {
+      kind: 'counter',
+      counter: 'age1.counter.scavengeUses',
+      atLeast: AGE1_SCAVENGE_MAX_USES,
+    },
+    effects: [
+      {
+        kind: 'log',
+        message:
+          'Le crassier est épuisé. Vous vous redressez, les paumes vides, avec la sensation désagréable d’avoir déjà fait cela trop de fois.',
+      },
+      { kind: 'setFlag', flag: 'age1.flag.scavengeDepleted', value: true },
+    ],
+    choices: [
+      {
+        id: 'ack',
+        label: 'Ce n’est plus ici',
+        description: 'Le tissu viendra d’un autre endroit, quand la maison l’exigera.',
+        effects: [
+          {
+            kind: 'log',
+            message:
+              'Vous laissez la friche derrière vous. Pour l’instant, bois et pierre doivent suffire.',
+          },
+        ],
+      },
+    ],
+  },
+
   {
     id: 'age1.event.endBedroom',
     title: 'La chambre est prête',
     description:
       "Le lit retrouve sa place, les murs ne craquent plus la nuit. Il est bon de s'étendre au lieu de seulement se reposer.",
     trigger: { kind: 'counter', counter: 'age1.counter.bedroomTilesRepaired', atLeast: 9 },
-    minEra: 2,
+    minEra: 1,
     effects: [
       { kind: 'log', message: 'La chambre est prête : le sommeil revient.' },
       { kind: 'setFlag', flag: 'age2.flag.bedroomComplete', value: true },
@@ -174,9 +212,8 @@ export const age1Events: EventType[] = [
     choices: [
       {
         id: 'enterAge2',
-        label: 'Sortir des ruines',
-        description:
-          'Passer à l’ère des chantiers : producteurs, extensions simples. Sauvegarde conseillée avant.',
+        label: 'Sortir de la chambre',
+        description: 'La maison, plus vaste, attend au-delà de cette porte.',
         effects: [
           { kind: 'setFlag', flag: 'age1.flag.era1Complete', value: true },
           { kind: 'setFlag', flag: 'ui.flag.journalShown', value: true },

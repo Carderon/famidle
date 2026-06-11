@@ -1,7 +1,8 @@
 import type { ActivityType, ActiveTimedActivity } from '@/types/ActivityType'
 import type { EventType } from '@/types/EventType'
 import type { GaugeType } from '@/types/GaugeType'
-import type { ImprovementType } from '@/types/ImprovementType'
+import type { ImprovementType, PendingImprovementBuild } from '@/types/ImprovementType'
+import { parseImprovementPending } from '@/persistence/improvementPending'
 import type { GameLogEntry } from '@/types/LogType'
 import type { ResourceType } from '@/types/ResourceType'
 import type { Monument } from '@/types/MonumentType'
@@ -30,6 +31,11 @@ import {
   mergeQueuedEvents,
   mergeResources,
 } from '@/persistence/catalogMerge'
+import {
+  reconcileAge1ScavengeFlags,
+  scavengeOnceFiredIdsForCounter,
+} from '@/persistence/age1SaveReconcile'
+import { reconcileEra2RoomsCounter } from '@/persistence/era2SaveReconcile'
 
 /**
  * Sauvegarde / chargement (`localStorage`, clé {@link SAVE_KEY}).
@@ -77,7 +83,7 @@ export type GameSnapshotV1 = {
   gauges: GaugeType[]
   world: WorldSnapshotV1
   improvements: ImprovementType[]
-  improvementPending: Record<string, number>
+  improvementPending: Record<string, PendingImprovementBuild | number>
   improvementGameTimeSim: number
   activities: ActivityType[]
   activityCooldowns: Record<string, number>
@@ -184,7 +190,7 @@ export function collectSnapshot(): GameSnapshotV1 {
       gameTimeSim: monumentStore.gameTimeSim,
     }) as WorldSnapshotV1,
     improvements: cloneJson(improvementStore.improvements),
-    improvementPending: cloneJson(improvementStore.pendingBuildCompleteAt),
+    improvementPending: cloneJson(improvementStore.pendingBuilds),
     improvementGameTimeSim: improvementStore.gameTimeSim,
     activities: cloneJson(activityStore.activities),
     activityCooldowns: cloneJson(activityStore.cooldownUntilSim),
@@ -232,10 +238,12 @@ export function applyGameSnapshot(data: GameSnapshotV1): void {
     activeCharacterIndex: data.character.activeCharacterIndex,
   })
 
-  gameState.$patch({
-    flags: cloneJson(data.gameState.flags),
-    counters: cloneJson(data.gameState.counters),
-  })
+  const counters = reconcileEra2RoomsCounter(
+    cloneJson(data.gameState.flags),
+    cloneJson(data.gameState.counters),
+  )
+  const flags = reconcileAge1ScavengeFlags(cloneJson(data.gameState.flags), counters)
+  gameState.$patch({ flags, counters })
 
   resourceStore.$patch({ resources: mergeResources(data.resources) })
   gaugeStore.$patch({ gauges: mergeGauges(data.gauges) })
@@ -259,7 +267,9 @@ export function applyGameSnapshot(data: GameSnapshotV1): void {
 
   improvementStore.$patch({
     improvements: mergeImprovements(data.improvements),
-    pendingBuildCompleteAt: cloneJson(data.improvementPending),
+    pendingBuilds: parseImprovementPending(
+      data.improvementPending as Record<string, unknown> | undefined,
+    ),
     gameTimeSim: data.improvementGameTimeSim,
   })
 
@@ -282,6 +292,7 @@ export function applyGameSnapshot(data: GameSnapshotV1): void {
   eventStore.$patch({ queuedEvents: mergeQueuedEvents(data.queuedEvents) })
 
   const mergedOnceFired = new Set<string>(data.onceFiredEventIds ?? [])
+  for (const id of scavengeOnceFiredIdsForCounter(counters)) mergedOnceFired.add(id)
   for (const ev of data.queuedEvents) mergedOnceFired.add(ev.id)
   clockStore.restoreOnceFiredEventIds([...mergedOnceFired])
 

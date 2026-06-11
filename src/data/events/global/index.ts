@@ -17,8 +17,9 @@ export const globalEvents: EventType[] = [
     id: 'global.event.bootstrap',
     trigger: { kind: 'time', atSeconds: 0 },
     effects: [
-      // L'écran de jeu démarre sur la liste des améliorations (firecamp).
+      // Intro : améliorations + colonne logs (events t=1 s visibles avant le feu).
       { kind: 'setFlag', flag: 'ui.flag.improvementsShown' },
+      { kind: 'setFlag', flag: 'ui.flag.logsShown' },
     ],
   },
 ]

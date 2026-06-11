@@ -1,13 +1,19 @@
 import type { ResourceCostBag } from '@/types/ResourceType'
 
 /** Regroupement UI des améliorations (ordre via `IMPROVEMENT_CATEGORY_ORDER`). */
-export type ImprovementCategory = 'introspection' | 'reconstruction' | 'era' | 'production'
+export type ImprovementCategory =
+  | 'introspection'
+  | 'reconstruction'
+  | 'era'
+  | 'production'
+  | 'knowledge'
 
 export const IMPROVEMENT_CATEGORY_ORDER: readonly ImprovementCategory[] = [
   'introspection',
   'reconstruction',
   'era',
   'production',
+  'knowledge',
 ] as const
 
 export const IMPROVEMENT_CATEGORY_LABELS: Record<ImprovementCategory, string> = {
@@ -15,6 +21,7 @@ export const IMPROVEMENT_CATEGORY_LABELS: Record<ImprovementCategory, string> = 
   reconstruction: 'Reconstruction',
   era: 'Ère',
   production: 'Production',
+  knowledge: 'Connaissance',
 }
 
 /** Jalons narratifs (ère, révélations…) — style de bouton renforcé. */
@@ -44,8 +51,8 @@ export interface ImprovementConditionType {
   minResourceQuantity?: Record<string, number>
   /** Slug of an improvement that must already be bought. */
   requiredImprovement?: string
-  /** Flag that must be set to true. */
-  requiredFlag?: string
+  /** Tous ces flags doivent être `true` (ET logique). */
+  requiredFlags?: string[]
 }
 
 /**
@@ -94,8 +101,16 @@ export type ImprovementEffectType =
  */
 export type ImprovementCost = ResourceCostBag
 
+/** Construction en cours (coûts payés au démarrage, remboursables si annulation). */
+export type PendingImprovementBuild = {
+  completeAt: number
+  refundCosts: ImprovementCost
+  costsPrepaid: boolean
+}
+
 export interface ImprovementType {
   name: string
+  label?: string
   slug: string
   /** Section dans la liste d’améliorations. */
   category: ImprovementCategory

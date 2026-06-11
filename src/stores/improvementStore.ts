@@ -6,7 +6,11 @@ import { useCharacterStore } from '@/stores/characterStore'
 import { useGameStateStore } from '@/stores/gameStateStore'
 import { useActivityStore } from '@/stores/activityStore'
 import { useLogStore } from '@/stores/logStore'
-import type { ImprovementType } from '@/types/ImprovementType.ts'
+import type {
+  ImprovementCost,
+  ImprovementType,
+  PendingImprovementBuild,
+} from '@/types/ImprovementType.ts'
 import {
   IMPROVEMENT_CATEGORY_LABELS,
   IMPROVEMENT_CATEGORY_ORDER,
@@ -40,11 +44,21 @@ export const useImprovementStore = defineStore('improvements', () => {
 
   /** Temps sim (s), synchronisé par le clock — même référentiel que les cooldowns d’activités. */
   const gameTimeSim = ref(0)
-  /** Fin de construction sim (s) : `buyImprovement` est appelé quand `gameTimeSim` l’atteint. */
-  const pendingBuildCompleteAt = ref<Record<string, number>>({})
+  /** Constructions en cours (coûts prélevés au 1er clic). */
+  const pendingBuilds = ref<Record<string, PendingImprovementBuild>>({})
+
+  function refundImprovementCosts(costs: ImprovementCost) {
+    const resourceStore = useResourceStore()
+    for (const { resourceSlug, quantity } of costs) {
+      if (quantity > 0) resourceStore.addResource(resourceSlug, quantity)
+    }
+  }
 
   function clearPendingBuilds() {
-    pendingBuildCompleteAt.value = {}
+    for (const pending of Object.values(pendingBuilds.value)) {
+      if (pending.costsPrepaid) refundImprovementCosts(pending.refundCosts)
+    }
+    pendingBuilds.value = {}
   }
 
   /**
@@ -52,24 +66,24 @@ export const useImprovementStore = defineStore('improvements', () => {
    */
   function applyGameTime(simElapsedSeconds: number) {
     gameTimeSim.value = simElapsedSeconds
-    const pending = { ...pendingBuildCompleteAt.value }
+    const pending = { ...pendingBuilds.value }
     let changed = false
     for (const slug of Object.keys(pending)) {
-      if (simElapsedSeconds >= pending[slug]) {
-        buyImprovement(slug)
+      if (simElapsedSeconds >= pending[slug].completeAt) {
+        completeImprovement(slug, { skipCost: pending[slug].costsPrepaid })
         delete pending[slug]
         changed = true
       }
     }
-    if (changed) pendingBuildCompleteAt.value = pending
+    if (changed) pendingBuilds.value = pending
   }
 
   /**
    * Lance une construction alignée sur le temps sim (pause / vitesse).
-   * `buildTime <= 0` achète immédiatement.
+   * Coûts prélevés ici ; `buildTime <= 0` achète immédiatement.
    */
   function scheduleBuild(slug: string): boolean {
-    if (pendingBuildCompleteAt.value[slug] != null) return false
+    if (pendingBuilds.value[slug] != null) return false
     const improvement = improvements.value.find((i) => i.slug === slug)
     if (!improvement || improvement.isBought) return false
     if (!canBuyImprovement(slug)) return false
@@ -79,22 +93,33 @@ export const useImprovementStore = defineStore('improvements', () => {
       return buyImprovement(slug)
     }
 
-    pendingBuildCompleteAt.value = {
-      ...pendingBuildCompleteAt.value,
-      [slug]: gameTimeSim.value + duration,
+    const deps = buildDeps()
+    let refundCosts: ImprovementCost = []
+    if (improvement.costs?.length) {
+      if (!spendImprovementCosts(improvement, deps)) return false
+      refundCosts = improvement.costs.map((c) => ({ ...c }))
+    }
+
+    pendingBuilds.value = {
+      ...pendingBuilds.value,
+      [slug]: {
+        completeAt: gameTimeSim.value + duration,
+        refundCosts,
+        costsPrepaid: true,
+      },
     }
     return true
   }
 
   function isPendingBuild(slug: string): boolean {
-    return pendingBuildCompleteAt.value[slug] != null
+    return pendingBuilds.value[slug] != null
   }
 
   /** Progression 0–1 de la barre de construction (temps sim). */
   function getBuildProgress01(slug: string, buildTimeSeconds: number): number {
-    const end = pendingBuildCompleteAt.value[slug]
-    if (end == null || buildTimeSeconds <= 0) return 0
-    const start = end - buildTimeSeconds
+    const pending = pendingBuilds.value[slug]
+    if (!pending || buildTimeSeconds <= 0) return 0
+    const start = pending.completeAt - buildTimeSeconds
     const t = gameTimeSim.value
     return Math.min(1, Math.max(0, (t - start) / buildTimeSeconds))
   }
@@ -135,23 +160,19 @@ export const useImprovementStore = defineStore('improvements', () => {
   }
 
   /**
-   * Buy an improvement.
-   *
-   * - no-op if the improvement doesn't exist, is already bought, doesn't
-   *   meet its conditions, or its `costs` are unaffordable
-   * - on success: debits the costs, marks as bought, applies one-shot effects,
-   *   and refreshes resource rates (because passive `resourceRate` effects
-   *   may have just become active)
+   * Finalise l’achat (effets, flags). Prélève les coûts sauf si déjà payés au démarrage.
    */
-  function buyImprovement(slug: string): boolean {
+  function completeImprovement(slug: string, options: { skipCost: boolean }): boolean {
     const improvement = improvements.value.find((i) => i.slug === slug)
     if (!improvement || improvement.isBought) return false
 
     const deps = buildDeps()
     if (!meetsConditions(improvement, deps)) return false
-    if (!canAffordImprovement(improvement, deps)) return false
 
-    if (!spendImprovementCosts(improvement, deps)) return false
+    if (!options.skipCost) {
+      if (!canAffordImprovement(improvement, deps)) return false
+      if (!spendImprovementCosts(improvement, deps)) return false
+    }
 
     improvement.isBought = true
     applyEffects(improvement.effects, deps)
@@ -159,10 +180,16 @@ export const useImprovementStore = defineStore('improvements', () => {
     const gaugeStore = useGaugeStore()
     resourceStore.getResourceRates()
     resourceStore.recomputeResourceCaps()
+    gaugeStore.getGaugeRates()
     gaugeStore.recomputeGaugeCaps()
     resourceStore.recomputeVisibility()
     useActivityStore().updateActivityVisibility()
     return true
+  }
+
+  /** Achat immédiat (coûts prélevés ici). */
+  function buyImprovement(slug: string): boolean {
+    return completeImprovement(slug, { skipCost: false })
   }
 
   /**
@@ -210,9 +237,7 @@ export const useImprovementStore = defineStore('improvements', () => {
 
   function sortImprovementsInCategory(list: ImprovementType[]): ImprovementType[] {
     return [...list].sort(
-      (a, b) =>
-        (a.sortOrder ?? 999) - (b.sortOrder ?? 999) ||
-        a.name.localeCompare(b.name, 'fr'),
+      (a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.name.localeCompare(b.name, 'fr'),
     )
   }
 
@@ -241,7 +266,7 @@ export const useImprovementStore = defineStore('improvements', () => {
   return {
     improvements,
     gameTimeSim,
-    pendingBuildCompleteAt,
+    pendingBuilds,
     applyGameTime,
     scheduleBuild,
     isPendingBuild,

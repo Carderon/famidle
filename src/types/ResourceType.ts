@@ -22,3 +22,11 @@ export interface ResourceConditionType {
 }
 
 export type ResourceCostBag = Readonly<{ resourceSlug: string; quantity: number }[]>
+
+/** Une ligne de coût pour l’affichage (stock vs besoin). */
+export type ResourceCostAffordanceLine = {
+  resourceSlug: string
+  quantity: number
+  owned: number
+  canAfford: boolean
+}

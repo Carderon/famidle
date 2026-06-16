@@ -12,6 +12,7 @@ import { useGameStateStore } from '@/stores/gameStateStore'
 import { useGaugeStore } from '@/stores/gaugeStore'
 import { useImprovementStore } from '@/stores/improvementStore'
 import { useLogStore } from '@/stores/logStore'
+import { useMonumentStore } from '@/stores/monumentStore'
 import { useResourceStore } from '@/stores/resourceStore'
 import {
   applyActivityEffects,
@@ -56,6 +57,10 @@ function clearRelaunchKeys(
     delete p[slug]
   }
   return { enabled: e, pending: p }
+}
+
+function activityRequiresIdle(activity: ActivityType): boolean {
+  return activity.requiresIdle === true || activity.category === 'rest'
 }
 
 export const useActivityStore = defineStore('activities', () => {
@@ -128,6 +133,60 @@ export const useActivityStore = defineStore('activities', () => {
 
   function isInterfaceBlocked(): boolean {
     return useGameStateStore().getFlag('ui.flag.cinematicActive')
+  }
+
+  /** Au moins une activité timed en cours ou en recharge (y compris entre deux cycles auto). */
+  function hasBusyTimedActivities(): boolean {
+    for (const activity of activities.value) {
+      if (getActivityKind(activity) !== 'timed') continue
+      if (isTimedSlotRunning(activity.slug) || isOnCooldown(activity.slug)) return true
+    }
+    return false
+  }
+
+  function hasPendingMonumentRepairs(): boolean {
+    return Object.keys(useMonumentStore().pendingRepairs).length > 0
+  }
+
+  function hasPendingImprovementBuilds(): boolean {
+    return Object.keys(useImprovementStore().pendingBuilds).length > 0
+  }
+
+  function isWorldIdleForRest(): boolean {
+    return (
+      !hasBusyTimedActivities() &&
+      !hasPendingMonumentRepairs() &&
+      !hasPendingImprovementBuilds()
+    )
+  }
+
+  function getIdleBlockedReason(): string | null {
+    if (hasBusyTimedActivities()) {
+      return 'Terminez l’activité longue en cours avant de vous reposer.'
+    }
+    if (hasPendingMonumentRepairs()) {
+      return 'Terminez la réparation en cours avant de vous reposer.'
+    }
+    if (hasPendingImprovementBuilds()) {
+      return 'Terminez la construction en cours avant de vous reposer.'
+    }
+    return null
+  }
+
+  /** Message joueur quand l’activité est bloquée pour une raison métier connue. */
+  function getActivityBlockedReason(slug: string): string | null {
+    const activity = activities.value.find((a) => a.slug === slug)
+    if (!activity) return null
+
+    if (activityRequiresIdle(activity) && !isWorldIdleForRest()) {
+      return getIdleBlockedReason()
+    }
+
+    if (isInterfaceBlocked() && getActivityKind(activity) === 'timed') {
+      return 'Terminez le sommeil avant de lancer une autre action.'
+    }
+
+    return null
   }
 
   function clearCinematicTimer(): void {
@@ -469,6 +528,8 @@ export const useActivityStore = defineStore('activities', () => {
     const activity = activities.value.find((a) => a.slug === slug)
     if (!activity) return false
 
+    if (activityRequiresIdle(activity) && !isWorldIdleForRest()) return false
+
     const deps = buildDeps()
 
     if (getActivityKind(activity) === 'timed') {
@@ -535,6 +596,8 @@ export const useActivityStore = defineStore('activities', () => {
     const activity = activities.value.find((a) => a.slug === slug)
     if (!activity) return false
 
+    if (activityRequiresIdle(activity) && !isWorldIdleForRest()) return false
+
     if (getActivityKind(activity) === 'timed') {
       const duration = activity.durationSeconds
       if (duration == null || duration <= 0) return false
@@ -590,6 +653,7 @@ export const useActivityStore = defineStore('activities', () => {
     updateActivityVisibility,
     performActivity,
     canPerformActivity,
+    getActivityBlockedReason,
     isOnCooldown,
     getCooldownRemainingSimSeconds,
     getTimedProgress01ForSlug,

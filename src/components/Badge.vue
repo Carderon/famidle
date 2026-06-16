@@ -1,6 +1,7 @@
 <template>
   <div class="flex items-center justify-center">
-    <img :src="badgeImage" :alt="`Era Badge`" class="h-[200px]" />
+    <img :src="badgeImage" alt="Badge d'ère" draggable="false"
+      class="pointer-events-none select-none w-full h-full object-contain" />
   </div>
 </template>
 

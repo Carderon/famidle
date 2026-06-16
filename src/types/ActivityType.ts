@@ -118,4 +118,9 @@ export interface ActivityType {
   effects?: ActivityEffectType[]
   /** Mis à jour par `activityStore.updateActivityVisibility`. */
   isVisible: boolean
+  /**
+   * Repos / sommeil : interdit tant qu’une activité timed, une construction
+   * ou une réparation de tuile est en cours. Implicite si `category === 'rest'`.
+   */
+  requiresIdle?: boolean
 }

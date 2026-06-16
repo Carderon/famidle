@@ -11,10 +11,6 @@ export class EventLoader {
     // 3-7 à implémenter quand les fichiers seront créés
   }
 
-  static getEventsForAge(age: number): EventType[] {
-    return this.eventsByAge[age] || []
-  }
-
   static getAllEvents(): EventType[] {
     return Object.values(this.eventsByAge).flat()
   }

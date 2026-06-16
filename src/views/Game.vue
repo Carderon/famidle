@@ -1,28 +1,29 @@
 <template>
-  <div class="relative w-full h-screen">
-    <!-- Composant pour le fond d'écran et les animations -->
+  <div class="relative w-full min-h-screen min-w-[900px] 2xl:h-screen">
     <Cinematics />
 
     <div class="relative grid grid-cols-12 w-full min-h-full dark:bg-gray-800 bg-white overflow-hidden">
       <!-- Gauche : Ressources et jauges -->
-      <aside class="col-span-3 xl:col-span-2 min-h-full border-gray-300 dark:border-gray-600"
+      <aside class="relative col-span-3 xl:col-span-2 min-h-full border-gray-300 dark:border-gray-600 hidden xl:block"
         :class="{ 'border-r bg-gray-50 dark:bg-gray-900/40': isGaugesShown || isResourcesShown }">
         <GaugeList />
         <ResourceList />
+        <Badge v-show="isBadgesShown"
+          class="w-full max-w-[150px] mx-auto absolute bottom-0 left-[50%] -translate-x-1/2" />
       </aside>
 
       <!-- Centre : Activités et feu de camp -->
-      <main class="p-6 flex flex-col col-span-9 xl:col-span-8 h-screen">
-        <div class="fixed bottom-0 left-0">
-          <transition name="fade">
-            <span v-if="elapsed >= 1" class="text-black dark:text-white">{{ Math.floor(elapsed) }}</span>
-          </transition>
+      <main class="py-0 px-6 xl:px-6 xl:py-6 flex flex-col col-span-12 xl:col-span-8 min-h-screen 2xl:h-screen">
+        <div class="xl:hidden flex gap-2 items-center ">
+          <Badge v-show="isBadgesShown" class="w-20 h-20 flex items-center justify-center" />
+          <GaugeList class="flex-1" />
         </div>
 
         <nav v-if="tabs.length && tabs.length > 1" class="mb-4 flex flex-wrap gap-2 border-b border-gray-400 relative">
-          <button v-for="tab in tabs" :key="tab.id" class="relative px-3 py-1 text-sm transition top-[1px]" :class="activeTab === tab.id
-            ? 'text-orange-500 border-b border-orange-500'
-            : 'text-black hover:text-orange-200 dark:text-white'" @click="onTabClick(tab.id)">
+          <button v-for="tab in tabs.filter((tab) => tab.isVisible)" :key="tab.id"
+            class="relative px-3 py-1 text-sm transition top-[1px]" :class="activeTab === tab.id
+              ? 'dark:text-orange-500 text-amber-500 border-b dark:border-orange-500 border-amber-500'
+              : 'text-black hover:text-orange-200 dark:text-white'" @click="onTabClick(tab.id)">
             {{ tab.label }}
             <NewDot v-if="tabHasNew(tab.id)" placement="tab" />
           </button>
@@ -42,7 +43,7 @@
 
         <LogList v-if="activeTab === 'logs'" show-legend />
 
-        <Badge v-show="isBadgesShown" />
+        <ResourceList v-if="activeTab === 'resources'" />
       </main>
 
       <!-- Droite : Journaux -->
@@ -54,12 +55,21 @@
     <EventPanel />
 
     <SettingsMenu />
+
+    <MinViewportWarning />
+
+    <div class="fixed bottom-0 left-0">
+      <transition name="fade">
+        <span v-if="elapsed >= 1" class="text-black dark:text-white">{{ Math.floor(elapsed) }}</span>
+      </transition>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onBeforeUnmount, onMounted, watchEffect, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, watchEffect, ref } from 'vue';
 import NewDot from '@/components/ui/NewDot.vue';
+import MinViewportWarning from '@/components/ui/MinViewportWarning.vue';
 import { useNewContent } from '@/composables/useNewContent';
 import { storeToRefs } from 'pinia';
 
@@ -121,20 +131,23 @@ const isResourcesShown = computed(() => gameState.getFlag('ui.flag.resourcesShow
 const isLogsShown = computed(() => gameState.getFlag('ui.flag.logsShown'));
 const isJournalShown = computed(() => gameState.getFlag('ui.flag.journalShown'));
 
-type CenterTabId = 'journal' | 'character' | 'activities' | 'improvements' | 'monument' | 'buildings' | 'logs'
-type TabDef = { id: CenterTabId; label: string }
+type CenterTabId = 'journal' | 'character' | 'activities' | 'improvements' | 'monument' | 'buildings' | 'resources' | 'logs'
+type TabDef = { id: CenterTabId; label: string; isVisible: boolean }
 
-const tabs = computed<TabDef[]>(() => {
-  const list: TabDef[] = []
-  if (isActivityShown.value) list.push({ id: 'activities', label: 'Activités' })
-  if (isImprovementsShown.value) list.push({ id: 'improvements', label: 'Améliorations' })
-  if (isMonumentShown.value) list.push({ id: 'monument', label: 'Monument' })
-  if (isBuildingShown.value) list.push({ id: 'buildings', label: 'Bâtiments' })
-  if (isCharacterShown.value) list.push({ id: 'character', label: 'Personnage' })
-  if (isJournalShown.value) list.push({ id: 'journal', label: 'Journal' })
-  if (window.innerWidth <= 1280 && isLogsShown.value) list.push({ id: 'logs', label: 'Logs' })
-  return list
-})
+// Aligné sur le breakpoint Tailwind `xl` (1280px) : logs en onglet si la colonne droite est masquée.
+// Aligné sur le breakpoint Tailwind `xl` (1280px) : resources en onglet si la colonne gauche est masquée.
+const windowWidth = ref(window.innerWidth)
+
+const tabs = computed<TabDef[]>(() => [
+  { id: 'activities', label: 'Activités', isVisible: isActivityShown.value },
+  { id: 'improvements', label: 'Améliorations', isVisible: isImprovementsShown.value },
+  { id: 'monument', label: 'Monument', isVisible: isMonumentShown.value },
+  { id: 'buildings', label: 'Bâtiments', isVisible: isBuildingShown.value },
+  { id: 'character', label: 'Personnage', isVisible: isCharacterShown.value },
+  { id: 'journal', label: 'Journal', isVisible: isJournalShown.value },
+  { id: 'resources', label: 'Ressources', isVisible: windowWidth.value < 1280 && isResourcesShown.value },
+  { id: 'logs', label: 'Logs', isVisible: windowWidth.value < 1280 && isLogsShown.value },
+]);
 
 const activeTab = ref<CenterTabId>('improvements')
 
@@ -154,15 +167,6 @@ watchEffect(() => {
   activeTab.value = tabs.value[0]?.id ?? 'activities'
 })
 
-onBeforeMount(() => {
-  // Pas de menu départ : premier lancement = personnage provisoire (classe choisie plus tard).
-  if (characterStore.characters.length === 0) {
-    characterStore.addCharacter('unset')
-  } else if (!characterStore.getActiveCharacter()) {
-    characterStore.activeCharacterIndex = 0
-  }
-});
-
 onMounted(() => {
   const snapshot = loadSnapshotFromStorage();
   if (snapshot) {
@@ -174,9 +178,14 @@ onMounted(() => {
     activityStore.initializeActivities();
     clockStore.start();
   }
+
+  window.addEventListener('resize', () => {
+    windowWidth.value = window.innerWidth
+  })
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', () => { })
   clockStore.stop();
 });
 </script>
@@ -195,19 +204,5 @@ onBeforeUnmount(() => {
 .fade-enter-to,
 .fade-leave-from {
   opacity: 1;
-}
-
-@keyframes backgroundTransition {
-  0% {
-    background-color: #0f172a;
-  }
-
-  100% {
-    background-color: #ffffff;
-  }
-}
-
-.bg-transition {
-  animation: backgroundTransition 10s forwards;
 }
 </style>

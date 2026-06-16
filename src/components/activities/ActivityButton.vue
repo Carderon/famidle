@@ -2,9 +2,9 @@
   <div class="relative group inline-block" @mouseenter="markSeen">
     <NewDot v-if="isNew" />
     <button type="button"
-      class="relative max-h-[32px] overflow-hidden rounded border px-2 py-1 text-white transition-all duration-100 hover:bg-neutral-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-neutral-600"
+      class="relative max-h-[32px] overflow-hidden rounded border px-2 py-1 text-white transition-all duration-100 disabled:cursor-not-allowed disabled:opacity-50"
       :class="[
-        isTimed ? 'border-orange-500' : 'border-gray-400',
+        isTimed ? 'bg-orange-800 hover:bg-orange-700' : 'hover:bg-neutral-500',
         timedRelaunchUi === 'looping'
           ? 'bg-amber-800/90 ring-1 ring-inset ring-amber-500/50'
           : 'bg-neutral-600',
@@ -162,11 +162,13 @@ const timedStatusLine = computed(() => {
   return ''
 })
 
-/** Indice vague quand l’action ne sert plus à rien (stock plein, etc.). */
+/** Indice quand l’action est bloquée (repos, stock plein, etc.). */
 const blockedHint = computed(() => {
   void uiTicksCount.value
   if (timedStatusLine.value) return ''
-  if (isActivityEffectNull.value) return 'Pour l’instant, il n’y a plus rien à en tirer.'
+  const reason = activityStore.getActivityBlockedReason(props.activity.slug)
+  if (reason) return reason
+  if (isActivityEffectNull.value) return 'ça ne servirait à rien'
   return ''
 })
 

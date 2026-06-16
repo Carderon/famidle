@@ -27,6 +27,8 @@ export const useMonumentStore = defineStore('monument', () => {
   /** Tuile en cours de réparation → instant sim de fin + coût à rembourser si annulation */
   const pendingRepairs = ref<Record<string, PendingRepair>>({})
 
+  const activeRoomId = ref<string | null>(null)
+
   const getMonument = (id: string) => monuments.value.find((m) => m.id === id)
 
   function getMonumentIdForEra(era: number): string {
@@ -190,6 +192,7 @@ export const useMonumentStore = defineStore('monument', () => {
 
   return {
     monuments,
+    activeRoomId,
     gameTimeSim,
     pendingRepairs,
     getMonument,

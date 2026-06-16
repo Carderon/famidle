@@ -32,7 +32,7 @@
           <li v-for="item in group.items" :key="item.slug"
             class="group relative rounded-md border border-gray-400/60 bg-neutral-800/40 px-3 py-2 hover:bg-neutral-700 dark:border-neutral-600 dark:bg-neutral-900/50">
             <p class="text-sm font-medium text-white">{{ item.name }}</p>
-            <p v-if="item.roomLabel" class="mt-0.5 text-[10px] uppercase tracking-wide text-gray-400">
+            <p v-if="item.roomLabel" class="mt-0.5 text-[10px] uppercase tracking-wide dark:text-gray-400 text-white">
               {{ item.roomLabel }}
             </p>
             <GameTooltip v-if="item.bonus || item.flavourText" placement="below">

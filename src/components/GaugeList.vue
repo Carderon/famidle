@@ -1,7 +1,7 @@
 <template>
   <transition name="fade">
     <div v-show="isGaugesShown" class="p-6 pb-2">
-      <h2 class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
+      <h2 class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-gray-600 dark:text-gray-400">
         Jauges
       </h2>
       <ul>
@@ -17,15 +17,12 @@
             <div :class="`h-full bg-${gauge.color}-500 rounded-full absolute transition-all duration-300`"
               :style="{ width: (gauge.current / gauge.max) * 100 + '%' }">
             </div>
-            <span
-              class="z-50 w-full p-2 text-center text-xs font-bold text-gray-800 dark:text-gray-100"
-              :class="{
-                'text-gray-700 dark:text-gray-200': gauge.current / gauge.max >= 0.5,
-                'text-amber-600 dark:text-amber-300':
-                  gauge.current / gauge.max < 0.5 && gauge.current / gauge.max > 0.2,
-                'text-red-600 dark:text-red-400': gauge.current / gauge.max <= 0.2,
-              }"
-              >{{ gauge.current.toFixed(2) }} / {{ gauge.max.toFixed(2) }}</span>
+            <span class="z-50 w-full p-2 text-center text-xs font-bold text-gray-800 dark:text-gray-100" :class="{
+              'text-gray-700 dark:text-gray-200': gauge.current / gauge.max >= 0.5,
+              'text-amber-600 dark:text-amber-300':
+                gauge.current / gauge.max < 0.5 && gauge.current / gauge.max > 0.2,
+              'text-red-600 dark:text-red-400': gauge.current / gauge.max <= 0.2,
+            }">{{ gauge.current.toFixed(2) }} / {{ gauge.max.toFixed(2) }}</span>
           </div>
 
           <GameTooltip placement="side">

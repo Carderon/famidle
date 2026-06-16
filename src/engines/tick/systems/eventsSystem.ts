@@ -56,7 +56,7 @@ export function createEventsSystem(deps: EventsSystemDeps): TickSystem {
 
       const era = deps.getEra()
 
-      const candidates = [...EventLoader.getEventsForAge(0), ...EventLoader.getEventsForAge(era)]
+      const candidates = [...EventLoader.getAllEvents()]
 
       for (const event of candidates) {
         const isOnce = event.once !== false

@@ -1,64 +1,56 @@
 <template>
-  <section v-if="monument" class="h-full">
-    <header class="mb-4 flex items-baseline justify-between gap-4">
-      <div>
-        <p class="text-xs uppercase tracking-[0.3em] text-gray-500">Monument</p>
-        <h2 class="text-3xl font-bold text-black dark:text-white">{{ monument.name }}</h2>
+  <section v-if="monument" class="relative h-full">
+    <header class="z-10 mb-4 flex items-start justify-between gap-4 h-[200px]">
+      <div class="min-w-0">
+        <p class="text-xs uppercase tracking-[0.3em] text-gray-500">
+          {{ monument.name }}
+        </p>
+        <h2 class="text-3xl font-bold uppercase text-black dark:text-white">
+          {{ activeRoom?.name ?? '—' }}
+        </h2>
       </div>
-      <div class="text-right text-xs uppercase tracking-wider text-gray-500">
-        <div>{{ activeRoom?.name ?? '—' }}</div>
-        <div v-if="monumentProgress != null">{{ monumentProgress }}%</div>
+
+      <div v-if="useRoomPlan" id="monument-map-panel" role="dialog" aria-modal="true"
+        aria-labelledby="monument-map-title" class="" :class="{
+          'absolute right-0 top-0 z-50 px-10 py-10 overflow-y-auto rounded-xl border border-gray-400 bg-white/95 p-4 shadow-2xl backdrop-blur-sm dark:border-neutral-600 dark:bg-neutral-900/95': isMapOpen,
+          'flex shrink-0 flex-col items-end gap-2': !isMapOpen
+        }" @click.stop>
+        <button type="button"
+          class="z-[60] inline-flex items-center gap-1.5 rounded-lg border border-gray-400 bg-white px-2.5 py-1 text-[11px] font-medium normal-case tracking-normal text-black transition hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800"
+          :class="{ 'absolute left-[8px] top-[8px] width-[7.5em]': isMapOpen }" :aria-expanded="isMapOpen"
+          aria-controls="monument-map-panel" @click="handleToggleMap">
+          <svg class="h-4 w-4 shrink-0 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.75" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 20l-5.447-2.724A2 2 0 014 15.382V6.618a2 2 0 011.553-1.947L12 2l6.447 2.671A2 2 0 0120 6.618v8.764a2 2 0 01-1.553 1.894L12 20l-3-1.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v17.5M12 2l6.447 2.671M12 2L5.553 4.671" />
+          </svg>
+          {{ isMapOpen ? 'Fermer' : 'Carte' }}
+        </button>
+        <p v-if="isMapOpen" id="monument-map-title"
+          class="mb-3 text-right text-[10px] uppercase tracking-[0.25em] text-gray-500">
+          Plan — {{ monument.name }}
+        </p>
+        <MonumentMinimap :monument="monument" :active-room="activeRoom" :size="isMapOpen ? 'large' : 'small'"
+          @select-room="handleSelectRoom" />
       </div>
     </header>
-    <div class="flex">
-      <div class="w-1/5">
-        <nav v-if="useRoomPlan" class="mb-4 grid max-w-md gap-2 w-[20rem] absolute"
-          :style="{ gridTemplateColumns: `repeat(${layoutColCount}, minmax(0, 1fr))` }">
-          <template v-for="(row, ri) in monument.roomLayout" :key="ri">
-            <template v-for="(cell, ci) in row" :key="`${ri}-${ci}`">
-              <div v-if="cell === null"
-                class="h-[6rem] w-[6rem] rounded-lg border border-dashed border-gray-300 bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-900/40"
-                aria-hidden="true" />
-              <button v-else-if="roomById(cell)" type="button"
-                class="flex h-[6rem] w-[6rem] flex-col justify-center items-center rounded-lg border px-3 py-2 text-left text-sm transition"
-                :class="cell === activeRoomId
-                  ? 'border-neutral-800 bg-neutral-800 text-white dark:border-white dark:bg-white dark:text-black'
-                  : 'border-gray-400 bg-white text-black hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800'
-                  " @click="activeRoomId = cell">
-                <span class="font-medium">{{ roomById(cell)!.name }}</span>
-                <span class="text-xs opacity-80">{{ roomRepairLabel(cell) }}</span>
-              </button>
-              <div v-else
-                class="flex h-[6rem] w-[6rem] items-center justify-center rounded-lg border border-amber-400 bg-amber-50 text-xs text-amber-900 dark:bg-amber-950/50 dark:text-amber-100"
-                :title="`Pièce inconnue : ${cell}`">
-                ?
-              </div>
-            </template>
-          </template>
-        </nav>
 
-        <nav v-else-if="monument.rooms.length > 1" class="mb-4 flex flex-wrap gap-2">
-          <button v-for="room in monument.rooms" :key="room.id" type="button"
-            class="rounded-lg border border-gray-400 px-3 py-1 text-sm transition" :class="room.id === activeRoomId
-              ? 'bg-neutral-800 text-white'
-              : 'bg-white text-black hover:bg-neutral-100 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800'
-              " @click="activeRoomId = room.id">
-            {{ room.name }}
-          </button>
-        </nav>
-      </div>
-      <div class="w-4/5">
-        <Room v-if="activeRoom" :monument-id="monumentId" :room-id="activeRoom.id" />
-      </div>
-    </div>
+    <transition name="fade">
+      <div v-if="useRoomPlan && isMapOpen" class="absolute inset-0 z-40 bg-black/40 backdrop-blur-[1px]"
+        aria-hidden="true" @click="handleCloseMap" />
+    </transition>
+
+    <Room v-if="activeRoom" :monument-id="monumentId" :room-id="activeRoom.id" />
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useMonumentStore } from '@/stores/monumentStore'
-import type { Room as RoomType } from '@/types/MonumentType'
 import Room from '@/components/monuments/Room.vue'
+import MonumentMinimap from '@/components/monuments/MonumentMinimap.vue'
+import { storeToRefs } from 'pinia'
 
 defineOptions({ name: 'MonumentPanel' })
 
@@ -66,15 +58,8 @@ const props = defineProps<{ monumentId: string }>()
 
 const monumentStore = useMonumentStore()
 const monument = computed(() => monumentStore.getMonument(props.monumentId))
-
-const activeRoomId = ref<string | null>(null)
-
-watch(
-  () => props.monumentId,
-  () => {
-    activeRoomId.value = null
-  },
-)
+const { activeRoomId } = storeToRefs(monumentStore)
+const isMapOpen = ref(false)
 
 const activeRoom = computed(() => {
   const m = monument.value
@@ -88,37 +73,40 @@ const useRoomPlan = computed(() => {
   return Boolean(layout?.length && layout.some((row) => row.length > 0))
 })
 
-const layoutColCount = computed(() => {
-  const layout = monument.value?.roomLayout
-  if (!layout?.length) return 1
-  return Math.max(...layout.map((row) => row.length), 1)
-})
-
-function roomById(roomId: string): RoomType | undefined {
-  return monument.value?.rooms.find((r) => r.id === roomId)
+const handleSelectRoom = (roomId: string) => {
+  activeRoomId.value = roomId
+  isMapOpen.value = false
 }
 
-function roomRepairPercent(roomId: string): number | null {
-  const room = roomById(roomId)
-  if (!room) return null
-  const tiles = room.tiles.flat().filter((t) => !t.isVoid)
-  if (!tiles.length) return null
-  const repaired = tiles.filter((t) => t.state === 'ready').length
-  return Math.round((repaired / tiles.length) * 100)
+const handleToggleMap = () => {
+  isMapOpen.value = !isMapOpen.value
 }
 
-function roomRepairLabel(roomId: string): string {
-  const p = roomRepairPercent(roomId)
-  if (p == null) return '—'
-  return `${p}%`
+const handleCloseMap = () => {
+  isMapOpen.value = false
 }
-
-const monumentProgress = computed(() => {
-  const m = monument.value
-  if (!m) return null
-  const tiles = m.rooms.flatMap((r) => r.tiles.flat()).filter((t) => !t.isVoid)
-  if (!tiles.length) return 0
-  const repaired = tiles.filter((t) => t.state === 'ready').length
-  return Math.round((repaired / tiles.length) * 100)
-})
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.map-expand-enter-active,
+.map-expand-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform-origin: top right;
+}
+
+.map-expand-enter-from,
+.map-expand-leave-to {
+  opacity: 0;
+  transform: scale(0.92);
+}
+</style>

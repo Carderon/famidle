@@ -105,7 +105,7 @@ export const age1Activities: ActivityType[] = [
       { kind: 'addGauge', gaugeSlug: 'stamina', amount: Number.MAX_SAFE_INTEGER },
       { kind: 'incrementCounter', counter: 'age1.counter.nightsSlept', by: 1 },
       { kind: 'toggleFlag', flag: 'age1.flag.isNight' },
-      { kind: 'log', message: 'Vous dormez un peu. Le corps se détend.' },
+      { kind: 'logOnce', message: 'Vous dormez un peu. Le corps se détend.' },
     ],
     isVisible: false,
   },

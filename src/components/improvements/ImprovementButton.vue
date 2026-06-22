@@ -48,11 +48,13 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useClockStore } from '@/stores/clockStore'
 import { useResourceStore } from '@/stores/resourceStore'
+import { useGaugeStore } from '@/stores/gaugeStore'
 
 defineOptions({ name: 'ImprovementButton' })
 
 const improvementStore = useImprovementStore()
 const resourceStore = useResourceStore()
+const gaugeStore = useGaugeStore()
 const clockStore = useClockStore()
 const { uiTicksCount } = storeToRefs(clockStore)
 
@@ -106,7 +108,7 @@ function formatEffect(effect: ImprovementEffectType): string {
     case 'resourceMaxBonus':
       return `+${effect.amount} max ${resourceStore.getResource(effect.resourceSlug)?.name ?? effect.resourceSlug}`
     case 'gaugeRate':
-      return `${effect.amount >= 0 ? '+' : ''}${effect.amount} ${effect.gaugeSlug}/s`
+      return `${effect.amount >= 0 ? '+' : ''}${effect.amount} ${gaugeStore.getGauge(effect.gaugeSlug)?.name ?? effect.gaugeSlug}/s`
     case 'gaugeMaxBonus': {
       const gaugeNames: Record<string, string> = { health: 'vitalité', stamina: 'endurance' }
       return `+${effect.amount} max ${gaugeNames[effect.gaugeSlug] ?? effect.gaugeSlug}`

@@ -9,6 +9,4 @@ export interface JournalEntry {
   title?: string
   body: string
   trigger: EventTrigger
-  minEra?: number
-  maxEra?: number
 }

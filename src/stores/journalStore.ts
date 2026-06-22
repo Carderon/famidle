@@ -13,8 +13,6 @@ function toPseudoEvent(entry: JournalEntry): EventType {
   return {
     id: entry.id,
     trigger: entry.trigger,
-    minEra: entry.minEra,
-    maxEra: entry.maxEra,
   } as EventType
 }
 

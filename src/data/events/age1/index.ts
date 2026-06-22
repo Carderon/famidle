@@ -203,7 +203,6 @@ export const age1Events: EventType[] = [
     description:
       "Le lit retrouve sa place, les murs ne craquent plus la nuit. Il est bon de s'étendre au lieu de seulement se reposer.",
     trigger: { kind: 'counter', counter: 'age1.counter.bedroomTilesRepaired', atLeast: 9 },
-    minEra: 1,
     effects: [
       { kind: 'log', message: 'La chambre est prête : le sommeil revient.' },
       { kind: 'setFlag', flag: 'age2.flag.bedroomComplete', value: true },

@@ -39,9 +39,6 @@ export function isEligible(
   era: number,
   deps: Pick<EventEngineDeps, 'getFlag' | 'getCounter'>,
 ): boolean {
-  if (event.minEra != null && era < event.minEra) return false
-  if (event.maxEra != null && era > event.maxEra) return false
-
   switch (event.trigger.kind) {
     case 'time':
       return ctx.elapsed >= event.trigger.atSeconds

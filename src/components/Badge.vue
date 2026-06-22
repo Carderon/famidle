@@ -6,10 +6,11 @@
 </template>
 
 <script setup lang="ts">
-defineOptions({ name: 'BadgeView' })
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useCharacterStore } from '@/stores/characterStore'
 
-import { computed } from 'vue';
-import { useCharacterStore } from '@/stores/characterStore.ts'
+defineOptions({ name: 'BadgeView' })
 
 const badgeStages = [
   '/famidle/default.png',
@@ -20,10 +21,10 @@ const badgeStages = [
   '/famidle/stage5.png',
   '/famidle/stage6.png',
   '/famidle/stage7.png',
-];
+]
 
-const characterStore = useCharacterStore();
-const currentCharacter = computed(() => characterStore.getActiveCharacter());
-
-const badgeImage = computed(() => `${badgeStages[currentCharacter.value?.era ?? 0]}`);
+const characterStore = useCharacterStore()
+const { characters, activeCharacterIndex } = storeToRefs(characterStore)
+const currentCharacter = computed(() => characters.value[activeCharacterIndex.value])
+const badgeImage = computed(() => `${badgeStages[currentCharacter.value?.era ?? 1]}`)
 </script>

@@ -23,15 +23,15 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useActivityStore } from '@/stores/activityStore'
+import { useCinematicStore } from '@/stores/cinematicStore'
 import { useGameStateStore } from '@/stores/gameStateStore'
 import { useImprovementStore } from '@/stores/improvementStore'
 
 const improvementStore = useImprovementStore()
 const gameState = useGameStateStore()
-const activityStore = useActivityStore()
 const { improvements } = storeToRefs(improvementStore)
-const { activeCinematic } = storeToRefs(activityStore)
+const cinematicStore = useCinematicStore()
+const { activeCinematic } = storeToRefs(cinematicStore)
 
 const isCinematicActive = computed(() => gameState.getFlag('ui.flag.cinematicActive'))
 const isEra2Transition = computed(() => gameState.getFlag('age2.flag.era2TransitionPending'))

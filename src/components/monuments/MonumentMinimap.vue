@@ -65,7 +65,7 @@ const getCellBackgroundClass = (roomId: string): string => {
   if (p == null) return 'bg-gray-400'
   if (p < 25) return 'bg-red-500'
   if (p < 50) return 'bg-amber-500'
-  if (p < 75) return 'bg-orange-500'
+  if (p < 99) return 'bg-orange-500'
   return 'bg-emerald-600'
 }
 

@@ -1,8 +1,14 @@
 import type { GaugeCostBag } from '@/types/EventType'
 import type { ResourceCostBag } from '@/types/ResourceType'
 
-/** Clic immédiat vs production sur la durée (ère 2, slots limités). */
-export type ActivityKind = 'instant' | 'timed'
+/**
+ * Modèle unifié d’activité (voir `docs/ACTIVITY.md`).
+ *
+ * - `non_repeatable` : une exécution (peut avoir duration/cooldown)
+ * - `repeatable` : se relance tant que ça a un effet sur les stocks + conditions/ coûts OK
+ * - `alone` : autorisé seulement si aucune activité n’est en cours (prod ou cooldown)
+ */
+export type ActivityKind = 'non_repeatable' | 'repeatable' | 'alone'
 
 /** Regroupement UI des activités (ordre d’affichage via `ACTIVITY_CATEGORY_ORDER`). */
 export type ActivityCategory = 'gather' | 'rest' | 'travel'
@@ -23,12 +29,16 @@ export const ACTIVITY_CATEGORY_LABELS: Record<ActivityCategory, string> = {
 export type ActivityCinematicVariant = 'sleep'
 
 export interface ActiveCinematicState {
+  /** Identifie l’origine (activité, event, monument, etc.). */
+  source: string
   slug: string
   variant: ActivityCinematicVariant
+  /** Fin prévue en temps sim (s). */
+  endsAtSim: number
 }
 
-/** Libellés immersifs pour les activités timed en boucle (tooltips, pas de pastilles UI). */
-export interface ActivityTimedStatusCopy {
+/** Libellés immersifs pour les activités en boucle (tooltips). */
+export interface ActivityLoopStatusCopy {
   /** Ex. « Un convoi est en route. » — cycle en cours. */
   ongoing?: string
   /** Ex. « Plusieurs voyages d’affilée… » — boucle active. */
@@ -37,14 +47,17 @@ export interface ActivityTimedStatusCopy {
   stopPending?: string
 }
 
-/**
- * Slot d’activité **timed** en cours (coûts payés au démarrage, remboursés si annulation).
- */
-export interface ActiveTimedActivity {
+export type RunningActivityPhase = 'producing' | 'cooldown'
+
+/** Activité en cours (production) ou en récupération (cooldown). */
+export interface RunningActivity {
   slug: string
-  completeAt: number
-  paidResourceCosts: ResourceCostBag
-  paidGaugeCosts?: GaugeCostBag
+  kind: ActivityKind
+  phase: RunningActivityPhase
+  /** Fin de la phase courante (temps sim). */
+  endsAtSim: number
+  /** Repeatable: arrêt demandé (fin de cycle puis cooldown → stop). */
+  stopAfterThisCycle?: boolean
 }
 
 /**
@@ -63,10 +76,6 @@ export interface ActivityConditionType {
   hiddenWhenFlag?: string
   /** Masque l’activité quand le compteur atteint `atLeast` (ex. crassier épuisé). */
   hiddenWhenCounterAtLeast?: { name: string; atLeast: number }
-  /** Ère minimale du personnage actif (`era >= minEra`). */
-  minEra?: number
-  /** Ère maximale du personnage actif (`era <= maxEra`). */
-  maxEra?: number
 }
 
 /** Effets one-shot appliqués au moment où l'activité est résolue. */
@@ -99,16 +108,10 @@ export interface ActivityType {
   /** Durée réelle (s) de la cinématique si `blocksInterface`. */
   cinematicDurationSeconds?: number
   cinematicVariant?: ActivityCinematicVariant
-  /** Textes tooltips pour timed en boucle (remplace les pastilles « auto » / « stop »). */
-  timedStatus?: ActivityTimedStatusCopy
-  /**
-   * `instant` (défaut) : un clic applique tout de suite coûts + effets, puis cooldown.
-   * `timed` : coûts au démarrage, effets à la fin de `durationSeconds` (ère 2, concurrence limitée).
-   * Les `timed` relancent un nouveau cycle tout seuls après le cooldown ; un second clic
-   * demande l’arrêt : le cycle en cours (jusqu’à récompense + pause) se termine, sans relance.
-   */
+  /** Textes tooltips pour boucle (repeatable). */
+  timedStatus?: ActivityLoopStatusCopy
   kind?: ActivityKind
-  /** Obligatoire si `kind === 'timed'`. Temps sim (s) jusqu’aux effets. */
+  /** Temps sim (s) jusqu’aux effets. Si absent/≤0 : résolution immédiate. */
   durationSeconds?: number
   /** Délai minimum entre deux **fin** d’utilisation (après effets pour instant, après complétion pour timed). */
   cooldownSeconds: number
@@ -118,9 +121,6 @@ export interface ActivityType {
   effects?: ActivityEffectType[]
   /** Mis à jour par `activityStore.updateActivityVisibility`. */
   isVisible: boolean
-  /**
-   * Repos / sommeil : interdit tant qu’une activité timed, une construction
-   * ou une réparation de tuile est en cours. Implicite si `category === 'rest'`.
-   */
+  // interdit tant que runningActivities.length > 0
   requiresIdle?: boolean
 }

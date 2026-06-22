@@ -119,7 +119,7 @@ const displayFlavourHint = computed(() => {
   return ''
 })
 
-const isTimed = computed(() => (props.activity.kind ?? 'instant') === 'timed')
+const isTimed = computed(() => (props.activity.kind ?? 'non_repeatable') === 'repeatable')
 
 const timedRelaunchUi = computed(() =>
   isTimed.value ? activityStore.getTimedRelaunchUiState(props.activity.slug) : null,
@@ -165,9 +165,11 @@ const timedStatusLine = computed(() => {
 /** Indice quand l’action est bloquée (repos, stock plein, etc.). */
 const blockedHint = computed(() => {
   void uiTicksCount.value
-  if (timedStatusLine.value) return ''
   const reason = activityStore.getActivityBlockedReason(props.activity.slug)
   if (reason) return reason
+
+  if (timedStatusLine.value) return ''
+
   if (isActivityEffectNull.value) return 'ça ne servirait à rien'
   return ''
 })

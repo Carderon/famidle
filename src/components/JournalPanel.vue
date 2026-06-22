@@ -7,7 +7,8 @@
       </p>
     </header>
 
-    <ul v-if="entries.length" class="flex flex-col gap-6 border-l border-amber-200/60 pl-4 dark:border-amber-900/50">
+    <ul v-if="entries.reverse().length"
+      class="flex flex-col gap-6 border-l border-amber-200/60 pl-4 dark:border-amber-900/50">
       <li v-for="entry in entries" :key="entry.id" class="relative">
         <span
           class="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full border border-amber-400/80 bg-amber-100 dark:border-amber-600 dark:bg-amber-950"

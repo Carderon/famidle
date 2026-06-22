@@ -46,6 +46,20 @@ export const useCharacterStore = defineStore('character', () => {
     return characters.value[activeCharacterIndex.value]
   }
 
+  /** Nouvelle partie ou save corrompue : garantit au moins un personnage (ère 1). */
+  function ensureDefaultCharacter(): void {
+    if (characters.value.length > 0) return
+    characters.value.push({
+      name: '',
+      classType: 'unset',
+      isNew: true,
+      level: 0,
+      specialization: null,
+      era: 1,
+    })
+    activeCharacterIndex.value = 0
+  }
+
   function setEra(era: number) {
     const c = getActiveCharacter()
     if (c) c.era = era
@@ -56,6 +70,7 @@ export const useCharacterStore = defineStore('character', () => {
     addCharacter,
     activeCharacterIndex,
     getActiveCharacter,
+    ensureDefaultCharacter,
     setEra,
   }
 })

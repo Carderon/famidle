@@ -1,4 +1,4 @@
-import type { ActivityType, ActiveTimedActivity } from '@/types/ActivityType'
+import type { ActivityType, RunningActivity } from '@/types/ActivityType'
 import type { EventType } from '@/types/EventType'
 import type { GaugeType } from '@/types/GaugeType'
 import type { ImprovementType, PendingImprovementBuild } from '@/types/ImprovementType'
@@ -86,14 +86,9 @@ export type GameSnapshotV1 = {
   improvementPending: Record<string, PendingImprovementBuild | number>
   improvementGameTimeSim: number
   activities: ActivityType[]
-  activityCooldowns: Record<string, number>
   activityGameTimeSim: number
-  /** Activités « sur la durée » en cours (ère 2). */
-  activityActiveTimed?: ActiveTimedActivity[]
-  /** Boucle auto : relance après chaque cooldown (activités `timed`). */
-  activityTimedRelaunchEnabled?: Record<string, boolean>
-  /** Second clic : fin de cycle puis pas de relance. */
-  activityTimedRelaunchStopPending?: Record<string, boolean>
+  /** Activités en cours (prod ou cooldown). */
+  activityRunningActivities?: RunningActivity[]
   logs: GameLogEntry[]
   queuedEvents: EventType[]
 }
@@ -193,11 +188,8 @@ export function collectSnapshot(): GameSnapshotV1 {
     improvementPending: cloneJson(improvementStore.pendingBuilds),
     improvementGameTimeSim: improvementStore.gameTimeSim,
     activities: cloneJson(activityStore.activities),
-    activityCooldowns: cloneJson(activityStore.cooldownUntilSim),
     activityGameTimeSim: activityStore.gameTimeSim,
-    activityActiveTimed: cloneJson(activityStore.activeTimed),
-    activityTimedRelaunchEnabled: cloneJson(activityStore.timedRelaunchEnabled),
-    activityTimedRelaunchStopPending: cloneJson(activityStore.timedRelaunchStopPending),
+    activityRunningActivities: cloneJson(activityStore.runningActivities),
     logs: cloneJson(logStore.logs),
     queuedEvents: cloneJson(eventStore.queuedEvents),
   }
@@ -273,19 +265,46 @@ export function applyGameSnapshot(data: GameSnapshotV1): void {
     gameTimeSim: data.improvementGameTimeSim,
   })
 
-  const relaunchEnabled = cloneJson(data.activityTimedRelaunchEnabled ?? {})
-  const relaunchStop = cloneJson(data.activityTimedRelaunchStopPending ?? {})
-  for (const slot of data.activityActiveTimed ?? []) {
-    if (relaunchEnabled[slot.slug] === undefined) relaunchEnabled[slot.slug] = true
+  // Migration simple: anciens champs (timed/cooldowns) → `runningActivities[]`.
+  const running: RunningActivity[] = []
+  const now = data.activityGameTimeSim
+
+  // Legacy cooldown map → runningActivities cooldown
+  const legacyCooldowns = (data as unknown as { activityCooldowns?: Record<string, number> })
+    .activityCooldowns
+  if (legacyCooldowns) {
+    for (const [slug, endsAtSim] of Object.entries(legacyCooldowns)) {
+      if (typeof endsAtSim !== 'number' || endsAtSim <= now) continue
+      running.push({
+        slug,
+        kind: 'non_repeatable',
+        phase: 'cooldown',
+        endsAtSim,
+      })
+    }
+  }
+
+  // Legacy timed slots → runningActivities producing
+  const legacyTimed = (
+    data as unknown as { activityActiveTimed?: { slug: string; completeAt: number }[] }
+  ).activityActiveTimed
+  if (Array.isArray(legacyTimed)) {
+    for (const slot of legacyTimed) {
+      if (!slot || typeof slot.slug !== 'string' || typeof slot.completeAt !== 'number') continue
+      if (slot.completeAt <= now) continue
+      running.push({
+        slug: slot.slug,
+        kind: 'repeatable',
+        phase: 'producing',
+        endsAtSim: slot.completeAt,
+      })
+    }
   }
 
   activityStore.hydrateFromSave({
     activities: mergeActivities(data.activities),
-    cooldownUntilSim: cloneJson(data.activityCooldowns),
     gameTimeSim: data.activityGameTimeSim,
-    activeTimed: cloneJson(data.activityActiveTimed ?? []),
-    timedRelaunchEnabled: relaunchEnabled,
-    timedRelaunchStopPending: relaunchStop,
+    runningActivities: cloneJson(data.activityRunningActivities ?? running),
   })
 
   logStore.hydrateLogs(data.logs)

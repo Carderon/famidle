@@ -17,6 +17,7 @@ import { useLogStore } from '@/stores/logStore'
 import { useResourceStore } from '@/stores/resourceStore'
 import { useMonumentStore } from '@/stores/monumentStore'
 import { useBuildingStore } from '@/stores/buildingStore'
+import { useCinematicStore } from '@/stores/cinematicStore'
 
 /**
  * Horloge de simulation : instancie le `ClockEngine`, enregistre les systèmes
@@ -73,6 +74,7 @@ export const useClockStore = defineStore('clock', () => {
   const improvementStore = useImprovementStore()
   const monumentStore = useMonumentStore()
   const buildingStore = useBuildingStore()
+  const cinematicStore = useCinematicStore()
 
   /** Événements `once` déjà tirés (voir `eventsSystem`). Ne pas vider au restart moteur après chargement sauvegarde. */
   const onceFiredEventIds = new Set<string>()
@@ -94,6 +96,7 @@ export const useClockStore = defineStore('clock', () => {
       activityStore.applyGameTime(ctx.elapsed)
       monumentStore.applyGameTime(ctx.elapsed)
       buildingStore.applyGameTime(ctx.elapsed)
+      cinematicStore.applyGameTime(ctx.elapsed)
     },
   }
 
@@ -148,6 +151,7 @@ export const useClockStore = defineStore('clock', () => {
     improvementStore.applyGameTime(0)
     monumentStore.applyGameTime(0)
     buildingStore.applyGameTime(0)
+    cinematicStore.applyGameTime(0)
   }
 
   function start(options?: { skipGameStateReset?: boolean; skipClearScheduled?: boolean }): void {
@@ -174,6 +178,7 @@ export const useClockStore = defineStore('clock', () => {
     activityStore.applyGameTime(s)
     monumentStore.applyGameTime(s)
     buildingStore.applyGameTime(s)
+    cinematicStore.applyGameTime(s)
   }
 
   function stop(): void {

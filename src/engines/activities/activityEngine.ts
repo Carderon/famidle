@@ -101,10 +101,6 @@ export function meetsConditions(
 
   if (c.requiredImprovement && !deps.isImprovementBought(c.requiredImprovement)) return false
 
-  const era = deps.getCharacterEra()
-  if (c.minEra != null && era < c.minEra) return false
-  if (c.maxEra != null && era > c.maxEra) return false
-
   return true
 }
 

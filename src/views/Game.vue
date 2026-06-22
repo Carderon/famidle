@@ -4,8 +4,8 @@
 
     <div class="relative grid grid-cols-12 w-full min-h-full dark:bg-gray-800 bg-white overflow-hidden">
       <!-- Gauche : Ressources et jauges -->
-      <aside class="relative col-span-3 xl:col-span-2 min-h-full border-gray-300 dark:border-gray-600 hidden xl:block"
-        :class="{ 'border-r bg-gray-50 dark:bg-gray-900/40': isGaugesShown || isResourcesShown }">
+      <aside class="relative min-h-full border-gray-300 dark:border-gray-600 hidden"
+        :class="{ 'border-r bg-gray-50 dark:bg-gray-900/40 col-span-3 xl:col-span-2 xl:block': isGaugesShown || isResourcesShown }">
         <GaugeList />
         <ResourceList />
         <Badge v-show="isBadgesShown"
@@ -13,13 +13,15 @@
       </aside>
 
       <!-- Centre : Activités et feu de camp -->
-      <main class="py-0 px-6 xl:px-6 xl:py-6 flex flex-col col-span-12 xl:col-span-8 min-h-screen 2xl:h-screen">
+      <main class="py-0 px-6 xl:px-6 xl:py-6 flex flex-col min-h-screen 2xl:h-screen"
+        :class="isGaugesShown || isResourcesShown ? 'col-span-12 xl:col-span-8' : 'col-span-10 xl:col-span-10'">
         <div class="xl:hidden flex gap-2 items-center ">
           <Badge v-show="isBadgesShown" class="w-20 h-20 flex items-center justify-center" />
           <GaugeList class="flex-1" />
         </div>
 
-        <nav v-if="tabs.length && tabs.length > 1" class="mb-4 flex flex-wrap gap-2 border-b border-gray-400 relative">
+        <nav v-if="tabs.filter((tab) => tab.isVisible).length > 1"
+          class="mb-4 flex flex-wrap gap-2 border-b border-gray-400 relative">
           <button v-for="tab in tabs.filter((tab) => tab.isVisible)" :key="tab.id"
             class="relative px-3 py-1 text-sm transition top-[1px]" :class="activeTab === tab.id
               ? 'dark:text-orange-500 text-amber-500 border-b dark:border-orange-500 border-amber-500'
@@ -171,9 +173,11 @@ onMounted(() => {
   const snapshot = loadSnapshotFromStorage();
   if (snapshot) {
     applyGameSnapshot(snapshot);
+    characterStore.ensureDefaultCharacter();
     clockStore.start({ skipGameStateReset: true, skipClearScheduled: true });
     clockStore.syncSimulationElapsed(snapshot.elapsed);
   } else {
+    characterStore.ensureDefaultCharacter();
     improvementStore.initializeImprovements();
     activityStore.initializeActivities();
     clockStore.start();

@@ -99,8 +99,4 @@ export interface EventType {
    * Set to false for repeating ambient events.
    */
   once?: boolean
-  /** Restrict to era >= minEra (inclusive). */
-  minEra?: number
-  /** Restrict to era <= maxEra (inclusive). */
-  maxEra?: number
 }

@@ -60,7 +60,7 @@
 
     <MinViewportWarning />
 
-    <div class="fixed bottom-0 left-0">
+    <div v-if="isDebugMode" class="fixed bottom-0 left-0">
       <transition name="fade">
         <span v-if="elapsed >= 1" class="text-black dark:text-white">{{ Math.floor(elapsed) }}</span>
       </transition>
@@ -100,6 +100,7 @@ import { useMonumentStore } from '@/stores/monumentStore';
 
 defineOptions({ name: 'GameView' })
 
+
 const characterStore = useCharacterStore();
 const monumentStore = useMonumentStore();
 
@@ -132,6 +133,7 @@ const isGaugesShown = computed(() => gameState.getFlag('ui.flag.gaugesShown'));
 const isResourcesShown = computed(() => gameState.getFlag('ui.flag.resourcesShown'));
 const isLogsShown = computed(() => gameState.getFlag('ui.flag.logsShown'));
 const isJournalShown = computed(() => gameState.getFlag('ui.flag.journalShown'));
+const isDebugMode = computed(() => gameState.getFlag('ui.flag.isDebugMode'));
 
 type CenterTabId = 'journal' | 'character' | 'activities' | 'improvements' | 'monument' | 'buildings' | 'resources' | 'logs'
 type TabDef = { id: CenterTabId; label: string; isVisible: boolean }
@@ -186,6 +188,10 @@ onMounted(() => {
   window.addEventListener('resize', () => {
     windowWidth.value = window.innerWidth
   })
+
+  if (import.meta.env.VITE_DEBUG_MODE === 'true') {
+    gameState.setFlag('ui.flag.isDebugMode', true)
+  }
 });
 
 onBeforeUnmount(() => {

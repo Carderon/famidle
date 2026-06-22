@@ -189,7 +189,8 @@ onMounted(() => {
     windowWidth.value = window.innerWidth
   })
 
-  if (import.meta.env.VITE_DEBUG_MODE === 'true') {
+  // Debug local uniquement : DEV est false dans le build prod (même si la var est définie).
+  if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_MODE === 'true') {
     gameState.setFlag('ui.flag.isDebugMode', true)
   }
 });

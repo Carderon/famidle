@@ -101,20 +101,20 @@ export const age1Improvements: ImprovementType[] = [
   {
     slug: 'age1.improvement.getToEra2',
     name: 'Ouvrir la porte',
-    category: 'era',
+    category: 'age',
     sortOrder: 10,
     importance: 'milestone',
     buildTime: 5,
     isVisible: false,
-    conditions: { requiredFlags: ['age1.flag.era1Complete'] },
+    conditions: { requiredFlags: ['age1.flag.age1Complete'] },
     effects: [
       {
         kind: 'log',
         message:
           'La porte cède. L’air change, la maison s’ouvre sur plus de ruines, plus de travail, plus de doute.',
       },
-      { kind: 'setFlag', flag: 'age2.flag.era2TransitionPending', value: true },
-      { kind: 'setEra', era: 2 },
+      { kind: 'setFlag', flag: 'age2.flag.age2TransitionPending', value: true },
+      { kind: 'setAge', age: 2 },
     ],
     isBought: false,
     flavourText:

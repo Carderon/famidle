@@ -1,7 +1,7 @@
 import type { ResourceType } from '@/types/ResourceType'
 
 /**
- * Ressources ère 2.
+ * Ressources Age 2.
  *
  * - **Eau** : visible après `age2.improvement.buildWell` (`age2.flag.waterUnlocked`).
  * - **Fibre végétale** : après arrosage du jardin (`age2.flag.canGatherPlantFiber`).
@@ -38,7 +38,8 @@ export const age2Resources: ResourceType[] = [
     baseRate: 0,
     max: 40,
     finalRate: 0,
-    flavourText: 'Bulles figées, bords tranchants, chaque lame compte pour les vitrines du laboratoire.',
+    flavourText:
+      'Bulles figées, bords tranchants, chaque lame compte pour les vitrines du laboratoire.',
     conditions: { requiredFlag: 'age2.flag.canCraftGlass' },
     isVisible: false,
   },

@@ -1,7 +1,7 @@
 import type { ActivityType } from '@/types/ActivityType'
 
 /**
- * Activités ère 2 :
+ * Activités Age 2 :
  * - **timed** : bois, pierre, tissu (convois / boucle)
  * - **instant** : eau (puits), fibre végétale, plus tard verre & cristaux
  */
@@ -16,7 +16,7 @@ export const age2Activities: ActivityType[] = [
     durationSeconds: 14,
     cooldownSeconds: 5,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 5 }],
-    conditions: { requiredFlag: 'age1.flag.era1Complete' },
+    conditions: { requiredFlag: 'age1.flag.age1Complete' },
     timedStatus: {
       ongoing: 'Vous coupez du bois. Plus vous coupez, plus il y en a.',
       looping: 'Vous travaillez sans relâche. Le chariot revient chargé de bois.',
@@ -39,7 +39,7 @@ export const age2Activities: ActivityType[] = [
     durationSeconds: 18,
     cooldownSeconds: 6,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 6 }],
-    conditions: { requiredFlag: 'age1.flag.era1Complete' },
+    conditions: { requiredFlag: 'age1.flag.age1Complete' },
     timedStatus: {
       ongoing: 'Vous amassez de la pierre. Plus vous amassez, plus il y en a.',
       looping: 'Vous travaillez sans relâche. Le chariot revient chargé de pierre.',

@@ -15,7 +15,7 @@ export function countEra2RoomsCompleteFromFlags(flags: Record<string, boolean>):
 }
 
 /**
- * Sauvegardes antérieures à `era2RoomsComplete` : le compteur peut manquer
+ * Sauvegardes antérieures à `age2RoomsComplete` : le compteur peut manquer
  * alors que les flags pièce sont déjà à `true`. On rattrape le minimum cohérent.
  */
 export function reconcileEra2RoomsCounter(

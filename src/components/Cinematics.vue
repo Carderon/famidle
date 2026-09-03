@@ -13,9 +13,9 @@
   </transition>
 
   <transition name="cinematic-fade">
-    <div v-if="isEra2Transition" class="pointer-events-none absolute inset-0 z-[55] overflow-hidden" role="presentation"
+    <div v-if="isAge2Transition" class="pointer-events-none absolute inset-0 z-[55] overflow-hidden" role="presentation"
       aria-hidden="true">
-      <div class="absolute inset-0 cinematic-scrim--era2" />
+      <div class="absolute inset-0 cinematic-scrim--age2" />
     </div>
   </transition>
 </template>
@@ -34,19 +34,19 @@ const cinematicStore = useCinematicStore()
 const { activeCinematic } = storeToRefs(cinematicStore)
 
 const isCinematicActive = computed(() => gameState.getFlag('ui.flag.cinematicActive'))
-const isEra2Transition = computed(() => gameState.getFlag('age2.flag.era2TransitionPending'))
+const isAge2Transition = computed(() => gameState.getFlag('age2.flag.age2TransitionPending'))
 
-let eraTransitionTimer: ReturnType<typeof setTimeout> | undefined
+let ageTransitionTimer: ReturnType<typeof setTimeout> | undefined
 
-watch(isEra2Transition, (active) => {
-  if (eraTransitionTimer) {
-    clearTimeout(eraTransitionTimer)
-    eraTransitionTimer = undefined
+watch(isAge2Transition, (active) => {
+  if (ageTransitionTimer) {
+    clearTimeout(ageTransitionTimer)
+    ageTransitionTimer = undefined
   }
   if (!active) return
-  eraTransitionTimer = setTimeout(() => {
-    gameState.setFlag('age2.flag.era2TransitionPending', false)
-    eraTransitionTimer = undefined
+  ageTransitionTimer = setTimeout(() => {
+    gameState.setFlag('age2.flag.age2TransitionPending', false)
+    ageTransitionTimer = undefined
   }, 2800)
 })
 
@@ -86,9 +86,9 @@ const cinematicLayerClass = computed(() => {
   background: #000;
 }
 
-.cinematic-scrim--era2 {
+.cinematic-scrim--age2 {
   background: radial-gradient(ellipse at 50% 45%, rgba(251, 191, 36, 0.35) 0%, rgba(15, 23, 42, 0.92) 55%);
-  animation: era2-transition 2.8s ease forwards;
+  animation: age2-transition 2.8s ease forwards;
 }
 
 .cinematic-layer--sleep {
@@ -106,7 +106,7 @@ const cinematicLayerClass = computed(() => {
   }
 }
 
-@keyframes era2-transition {
+@keyframes age2-transition {
   0% {
     opacity: 0;
   }

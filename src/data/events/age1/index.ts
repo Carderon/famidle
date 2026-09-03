@@ -214,7 +214,7 @@ export const age1Events: EventType[] = [
         label: 'Sortir de la chambre',
         description: 'La maison, plus vaste, attend au-delà de cette porte.',
         effects: [
-          { kind: 'setFlag', flag: 'age1.flag.era1Complete', value: true },
+          { kind: 'setFlag', flag: 'age1.flag.age1Complete', value: true },
           { kind: 'setFlag', flag: 'ui.flag.journalShown', value: true },
           {
             kind: 'log',

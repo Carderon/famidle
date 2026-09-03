@@ -44,12 +44,12 @@ export interface Room {
   tiles: Tile[][]
 }
 
-/** Lieu d’ère à reconstruire (tuiles / pièces). Hors onglet Production. */
+/** Lieu d’age à reconstruire (tuiles / pièces). Hors onglet Production. */
 export interface Monument {
   id: string
   name: string
-  /** Ère représentée par ce monument (sélection automatique dans l’UI). */
-  era: number
+  /** Age représentée par ce monument (sélection automatique dans l’UI). */
+  age: number
   rooms: Room[]
   /**
    * Plan du monument : chaque ligne = une rangée, chaque cellule = `id` d’une pièce

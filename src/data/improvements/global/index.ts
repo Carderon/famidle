@@ -1,7 +1,7 @@
 import type { ImprovementType } from '@/types/ImprovementType.ts'
 
 /**
- * Améliorations globales (toutes ères confondues).
+ * Améliorations globales (toutes ages confondues).
  *
  * Format 100% data-driven : les `effects` sont une union discriminée
  * interprétée par `improvementEngine`. Plus de `callback` impératif.

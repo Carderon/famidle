@@ -35,7 +35,7 @@ import {
   reconcileAge1ScavengeFlags,
   scavengeOnceFiredIdsForCounter,
 } from '@/persistence/age1SaveReconcile'
-import { reconcileEra2RoomsCounter } from '@/persistence/era2SaveReconcile'
+import { reconcileAge2RoomsCounter } from '@/persistence/age2SaveReconcile'
 
 /**
  * Sauvegarde / chargement (`localStorage`, clé {@link SAVE_KEY}).
@@ -74,7 +74,7 @@ export type GameSnapshotV1 = {
       level: number
       specialization: string | null
       isNew: boolean
-      era: number
+      age: number
     }[]
     activeCharacterIndex: number
   }
@@ -133,7 +133,7 @@ function resolveWorldFromSnapshot(data: GameSnapshotV1 & Record<string, unknown>
     | undefined
   if (legacyWorld && Array.isArray(legacyWorld.buildings) && legacyWorld.buildings.length) {
     const first = legacyWorld.buildings[0] as Monument | Building
-    if ('era' in first || 'rooms' in first) {
+    if ('age' in first || 'rooms' in first) {
       return {
         monuments: legacyWorld.buildings as Monument[],
         buildings: createBuildingsAge1(),
@@ -230,7 +230,7 @@ export function applyGameSnapshot(data: GameSnapshotV1): void {
     activeCharacterIndex: data.character.activeCharacterIndex,
   })
 
-  const counters = reconcileEra2RoomsCounter(
+  const counters = reconcileAge2RoomsCounter(
     cloneJson(data.gameState.flags),
     cloneJson(data.gameState.counters),
   )

@@ -31,10 +31,10 @@ export const useMonumentStore = defineStore('monument', () => {
 
   const getMonument = (id: string) => monuments.value.find((m) => m.id === id)
 
-  function getMonumentIdForEra(era: number): string {
-    const match = monuments.value.find((m) => m.era === era)
+  function getMonumentIdForAge(age: number): string {
+    const match = monuments.value.find((m) => m.age === age)
     if (match) return match.id
-    if (era >= 2) return 'age2.building.house-2'
+    if (age >= 2) return 'age2.building.house-2'
     return 'age1.building.house-1'
   }
 
@@ -196,7 +196,7 @@ export const useMonumentStore = defineStore('monument', () => {
     gameTimeSim,
     pendingRepairs,
     getMonument,
-    getMonumentIdForEra,
+    getMonumentIdForAge,
     getRoom,
     findTile,
     findTileContext,

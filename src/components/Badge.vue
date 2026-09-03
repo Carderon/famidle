@@ -26,5 +26,5 @@ const badgeStages = [
 const characterStore = useCharacterStore()
 const { characters, activeCharacterIndex } = storeToRefs(characterStore)
 const currentCharacter = computed(() => characters.value[activeCharacterIndex.value])
-const badgeImage = computed(() => `${badgeStages[currentCharacter.value?.era ?? 1]}`)
+const badgeImage = computed(() => `${badgeStages[currentCharacter.value?.age ?? 1]}`)
 </script>

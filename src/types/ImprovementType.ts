@@ -4,14 +4,14 @@ import type { ResourceCostBag } from '@/types/ResourceType'
 export type ImprovementCategory =
   | 'introspection'
   | 'reconstruction'
-  | 'era'
+  | 'age'
   | 'production'
   | 'knowledge'
 
 export const IMPROVEMENT_CATEGORY_ORDER: readonly ImprovementCategory[] = [
   'introspection',
   'reconstruction',
-  'era',
+  'age',
   'production',
   'knowledge',
 ] as const
@@ -19,18 +19,18 @@ export const IMPROVEMENT_CATEGORY_ORDER: readonly ImprovementCategory[] = [
 export const IMPROVEMENT_CATEGORY_LABELS: Record<ImprovementCategory, string> = {
   introspection: 'Introspection',
   reconstruction: 'Reconstruction',
-  era: 'Ère',
+  age: 'Age',
   production: 'Production',
   knowledge: 'Connaissance',
 }
 
-/** Jalons narratifs (ère, révélations…) — style de bouton renforcé. */
+/** Jalons narratifs (age, révélations…) — style de bouton renforcé. */
 export type ImprovementImportance = 'normal' | 'milestone'
 
-/** `true` si `importance === 'milestone'` ou effet `setEra` (passage d’ère). */
+/** `true` si `importance === 'milestone'` ou effet `setAge` (passage d’age). */
 export function isMilestoneImprovement(improvement: ImprovementType): boolean {
   if (improvement.importance === 'milestone') return true
-  return improvement.effects?.some((e) => e.kind === 'setEra') ?? false
+  return improvement.effects?.some((e) => e.kind === 'setAge') ?? false
 }
 
 /**
@@ -89,8 +89,8 @@ export type ImprovementEffectType =
   | { kind: 'incrementCounter'; counter: string; by?: number }
   /** One-shot: credit a positive `amount` of a resource (capped at max). */
   | { kind: 'addResource'; resourceSlug: string; amount: number }
-  /** One-shot: pass the character to the given era. */
-  | { kind: 'setEra'; era: number }
+  /** One-shot: pass the character to the given age. */
+  | { kind: 'setAge'; age: number }
 
 /**
  * Resource costs paid atomically when the improvement is bought.
@@ -118,7 +118,7 @@ export interface ImprovementType {
   sortOrder?: number
   /**
    * `milestone` : bouton et tooltip mis en avant (ères, tournants narratifs).
-   * Défaut déduit si un effet `setEra` est présent (`isMilestoneImprovement`).
+   * Défaut déduit si un effet `setAge` est présent (`isMilestoneImprovement`).
    */
   importance?: ImprovementImportance
   /**
@@ -128,7 +128,7 @@ export interface ImprovementType {
   flavourText?: string
   /**
    * Pièce monument liée (affichage « Acquis » uniquement).
-   * Absent = amélioration générale (puits, stockage, ère…).
+   * Absent = amélioration générale (puits, stockage, age…).
    */
   linkedRoomId?: string
   /** Time (in seconds) the player must wait before the improvement is bought. */
@@ -142,7 +142,7 @@ export interface ImprovementType {
   isVisible: boolean
   /**
    * Afficher dans le panneau **Acquis** après achat.
-   * `false` ou absent : masqué (lore, déblocages flags, jalons d’ère…).
+   * `false` ou absent : masqué (lore, déblocages flags, jalons d’age…).
    */
   isShown?: boolean
 }

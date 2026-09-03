@@ -5,7 +5,7 @@ export function createCabin(): Monument {
   return {
     id: 'age1.building.house-1',
     name: 'Cabane',
-    era: 1,
+    age: 1,
     rooms: [
       {
         id: 'age1.room.bedroom',

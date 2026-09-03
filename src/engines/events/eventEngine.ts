@@ -24,7 +24,7 @@ export interface EventEngineDeps {
   getGaugeQuantity: (gaugeSlug: string) => number
   spendGauge: (gaugeSlug: string, quantity: number) => boolean
   addGauge: (gaugeSlug: string, amount: number) => void
-  setEra: (era: number) => void
+  setAge: (age: number) => void
 }
 
 /**
@@ -36,7 +36,7 @@ export interface EventEngineDeps {
 export function isEligible(
   event: EventType,
   ctx: TickContext,
-  era: number,
+  age: number,
   deps: Pick<EventEngineDeps, 'getFlag' | 'getCounter'>,
 ): boolean {
   switch (event.trigger.kind) {
@@ -98,8 +98,8 @@ export function applyEffects(
       case 'addGauge':
         deps.addGauge(effect.gaugeSlug, effect.amount)
         break
-      case 'setEra':
-        deps.setEra(effect.era)
+      case 'setAge':
+        deps.setAge(effect.age)
         break
     }
   }

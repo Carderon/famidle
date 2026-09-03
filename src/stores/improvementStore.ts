@@ -145,8 +145,8 @@ export const useImprovementStore = defineStore('improvements', () => {
       incrementCounter: (counter, by) => gameState.incrementCounter(counter, by),
       addResource: (slug, amount) => resourceStore.addResource(slug, amount),
       spendResource: (costs) => resourceStore.spendResource(costs),
-      setEra: (era) => {
-        characterStore.setEra(era)
+      setAge: (age) => {
+        characterStore.setAge(age)
         activityStore.cancelActiveTimedAndRefund()
         activityStore.updateActivityVisibility()
       },

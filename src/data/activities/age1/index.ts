@@ -14,7 +14,7 @@ export const age1Activities: ActivityType[] = [
     flavourText: "À l'orée de la forêt, du petit bois attend.",
     cooldownSeconds: 8,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 6 }],
-    conditions: { requiredFlag: 'ui.flag.activityShown', hiddenWhenFlag: 'age1.flag.era1Complete' },
+    conditions: { requiredFlag: 'ui.flag.activityShown', hiddenWhenFlag: 'age1.flag.age1Complete' },
     effects: [
       { kind: 'addResource', resourceSlug: 'age1.resource.wood', amount: 5 },
       { kind: 'logOnce', message: "À l'orée de la forêt, vous ramassez du bois." },
@@ -30,7 +30,7 @@ export const age1Activities: ActivityType[] = [
     flavourText: 'Un mur effondré laisse des gravats récupérables.',
     cooldownSeconds: 8,
     gaugeCosts: [{ gaugeSlug: 'stamina', quantity: 6 }],
-    conditions: { requiredFlag: 'ui.flag.activityShown', hiddenWhenFlag: 'age1.flag.era1Complete' },
+    conditions: { requiredFlag: 'ui.flag.activityShown', hiddenWhenFlag: 'age1.flag.age1Complete' },
     effects: [
       { kind: 'addResource', resourceSlug: 'age1.resource.stone', amount: 5 },
       { kind: 'logOnce', message: 'Près du mur effondré, vous récupérez de la pierre.' },

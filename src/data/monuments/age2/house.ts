@@ -11,7 +11,7 @@ export function createHouse(): Monument {
   return {
     id: 'age2.building.house-2',
     name: 'Maison',
-    era: 2,
+    age: 2,
     rooms: [
       {
         id: 'age2.room.bedroom',

@@ -18,7 +18,7 @@ Jeu **idle / incremental** (Vue 3 + TypeScript + Pinia) orienté **contenu data-
 
 ## Fonctionnalités clés (vertical slice actuel)
 
-- **Ère 1 → Ère 2** : progression narrative + montée en complexité.
+- **Age 1 → Age 2** : progression narrative + montée en complexité.
 - **Activités** : instantanées et automatique (boucle, arrêt au second clic, coûts jauges).
 - **Maison (monument) multi-pièces** : réparation tuile par tuile, coûts par tuile, events “once” à la fin d’une pièce.
 - **Économie** :

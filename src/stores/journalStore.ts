@@ -24,13 +24,13 @@ export const useJournalStore = defineStore('journal', () => {
 
   const unlockedEntries = computed((): JournalEntry[] => {
     void uiTicksCount.value
-    const era = characterStore.getActiveCharacter()?.era ?? 0
+    const age = characterStore.getActiveCharacter()?.age ?? 0
     const ctx = { elapsed: elapsed.value, tick: tick.value, deltaTime: 0 }
     const deps = {
       getFlag: (flag: string) => gameState.getFlag(flag),
       getCounter: (counter: string) => gameState.getCounter(counter),
     }
-    return journalEntries.filter((entry) => isEligible(toPseudoEvent(entry), ctx, era, deps))
+    return journalEntries.filter((entry) => isEligible(toPseudoEvent(entry), ctx, age, deps))
   })
 
   return {

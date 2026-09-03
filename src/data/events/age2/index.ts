@@ -1,10 +1,10 @@
 import type { EventType } from '@/types/EventType'
 
 /** +1 à chaque event « pièce terminée » ; à 6 → intro lanterne. */
-export const AGE2_ROOMS_COMPLETE_COUNTER = 'age2.counter.era2RoomsComplete'
+export const AGE2_ROOMS_COMPLETE_COUNTER = 'age2.counter.age2RoomsComplete'
 
 /**
- * Ère 2 — un event `once` par pièce terminée (compteur tuiles réparées).
+ * Age 2 — un event `once` par pièce terminée (compteur tuiles réparées).
  */
 export const age2Events: EventType[] = [
   {

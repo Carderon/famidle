@@ -19,7 +19,7 @@ export interface ImprovementEngineDeps {
   incrementCounter: (counter: string, by?: number) => void
   addResource: (slug: string, amount: number) => void
   spendResource: (costs: ImprovementCost) => boolean
-  setEra: (era: number) => void
+  setAge: (age: number) => void
   getFlag: (flag: string) => boolean
 
   // --- getters (used by meetsConditions / canAfford) ---
@@ -132,7 +132,7 @@ export function applyEffects(
         deps.addResource(effect.resourceSlug, effect.amount)
         break
       case 'setEra':
-        deps.setEra(effect.era)
+        deps.setAge(effect.age)
         break
       case 'resourceRate':
         // Passive: read continuously by getResourceRateBonus, not applied here.

@@ -48,8 +48,8 @@ export const useEventStore = defineStore('event', () => {
       getGaugeQuantity: (slug) => gaugeStore.getGaugeQuantity(slug),
       spendGauge: (slug, qty) => gaugeStore.trySpendGauge(slug, qty),
       addGauge: (slug, amt) => gaugeStore.addGauge(slug, amt),
-      setEra: (era) => {
-        characterStore.setEra(era)
+      setAge: (age) => {
+        characterStore.setAge(age)
         activityStore.cancelActiveTimedAndRefund()
         activityStore.updateActivityVisibility()
       },

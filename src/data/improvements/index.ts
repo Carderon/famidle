@@ -8,7 +8,7 @@ import { age2Improvements } from './age2'
  *
  * Keeping it as a flat concatenation (vs an `EventLoader`-style class) for
  * now because:
- * - improvements aren't filtered by era at load time (visibility is computed
+ * - improvements aren't filtered by age at load time (visibility is computed
  *   at runtime via conditions)
  * - the array is small and rarely traversed in hot paths
  *

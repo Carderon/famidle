@@ -9,8 +9,8 @@ import { applyEffects, isEligible, type EventEngineDeps } from '@/engines/events
  * and free of direct Pinia/Vue imports.
  */
 export interface EventsSystemDeps extends EventEngineDeps {
-  /** Returns the current era of the active character (0 = global only). */
-  getEra: () => number
+  /** Returns the current age of the active character (0 = global only). */
+  getAge: () => number
   /** Queue an interactive event so the player can pick one choice. */
   enqueueEvent: (event: EventType) => void
   /** IDs des événements `once` déjà déclenchés cette partie (persistés avec la sauvegarde). */
@@ -21,7 +21,7 @@ export interface EventsSystemDeps extends EventEngineDeps {
  * Tick system that drives the event engine.
  *
  * On every tick:
- * 1. ask `EventLoader` for the events of the current era (+ global events)
+ * 1. ask `EventLoader` for the events of the current age (+ global events)
  * 2. for each event, check eligibility via `eventEngine.isEligible`
  * 3. if eligible:
  *    - passive event: apply its effects immediately
@@ -54,14 +54,14 @@ export function createEventsSystem(deps: EventsSystemDeps): TickSystem {
       if (currentSecond === lastScanSecond) return
       lastScanSecond = currentSecond
 
-      const era = deps.getEra()
+      const age = deps.getAge()
 
       const candidates = [...EventLoader.getAllEvents()]
 
       for (const event of candidates) {
         const isOnce = event.once !== false
         if (isOnce && triggered.has(event.id)) continue
-        if (!isEligible(event, ctx, era, deps)) continue
+        if (!isEligible(event, ctx, age, deps)) continue
 
         applyEffects(event.effects, deps)
         if (event.choices?.length) {

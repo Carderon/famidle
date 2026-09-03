@@ -246,8 +246,7 @@ export const age2Improvements: ImprovementType[] = [
       { kind: 'setFlag', flag: 'age2.flag.lanternBuilt', value: true },
       { kind: 'log', message: 'La lanterne est montée au bord du jardin.' },
     ],
-    flavourText:
-      'Un corps de verre, un cerceau de bois. Assez pour qu’on la voie de loin.',
+    flavourText: 'Un corps de verre, un cerceau de bois. Assez pour qu’on la voie de loin.',
   },
   {
     slug: 'age2.improvement.lightLantern',
@@ -274,9 +273,9 @@ export const age2Improvements: ImprovementType[] = [
     flavourText: 'Une mèche, un peu de cristal broyé, la lumière pour ceux qui reviendraient.',
   },
   {
-    slug: 'age2.improvement.getToEra3',
+    slug: 'age2.improvement.getToAge3',
     name: 'Passer à l’âge 3',
-    category: 'era',
+    category: 'age',
     sortOrder: 10,
     importance: 'milestone',
     buildTime: 3,

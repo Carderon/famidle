@@ -15,7 +15,7 @@ export const journalEntries: JournalEntry[] = [
     id: 'journal.age1',
     title: 'Colère - Pourquoi moi ? Pourquoi ici ?!',
     body: "La chambre tient à nouveau. Je comprends un peu mieux : je ne suis pas né ici, j'ai été laissé ici. Une famille m'attendait, ou m'attend encore. Reconstruire n'est pas un passe-temps, c'est un message. Je ne sais pas encore s'ils l'entendront.",
-    trigger: { kind: 'flag', flag: 'age1.flag.era1Complete' },
+    trigger: { kind: 'flag', flag: 'age1.flag.age1Complete' },
   },
   {
     id: 'journal.age2',

@@ -50,7 +50,7 @@ export interface ActivityEngineDeps {
   getResourceQuantity: (slug: string) => number
   getResourceMax: (slug: string) => number
   isImprovementBought: (slug: string) => boolean
-  /** Ère du personnage actif (1, 2, …). */
+  /** Age du personnage actif (1, 2, …). */
   getCharacterEra: () => number
 }
 

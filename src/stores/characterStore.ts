@@ -10,7 +10,7 @@ interface CharacterType {
   level: number
   specialization: string | null
   isNew: boolean
-  era: number
+  age: number
 }
 
 export const useCharacterStore = defineStore('character', () => {
@@ -31,7 +31,7 @@ export const useCharacterStore = defineStore('character', () => {
       specialization: null,
       // Le joueur démarre dans l'âge 1. La progression d'ère sera pilotée
       // plus tard par les events / improvements.
-      era: 1,
+      age: 1,
     }
 
     // edit data of store regarding the localstorage, one per character ?
@@ -55,14 +55,14 @@ export const useCharacterStore = defineStore('character', () => {
       isNew: true,
       level: 0,
       specialization: null,
-      era: 1,
+      age: 1,
     })
     activeCharacterIndex.value = 0
   }
 
-  function setEra(era: number) {
+  function setAge(age: number) {
     const c = getActiveCharacter()
-    if (c) c.era = era
+    if (c) c.age = age
   }
 
   return {
@@ -71,6 +71,6 @@ export const useCharacterStore = defineStore('character', () => {
     activeCharacterIndex,
     getActiveCharacter,
     ensureDefaultCharacter,
-    setEra,
+    setAge,
   }
 })

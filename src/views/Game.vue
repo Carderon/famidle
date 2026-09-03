@@ -105,8 +105,8 @@ const characterStore = useCharacterStore();
 const monumentStore = useMonumentStore();
 
 const activeMonumentId = computed(() => {
-  const era = characterStore.getActiveCharacter()?.era ?? 1
-  return monumentStore.getMonumentIdForEra(era)
+  const age = characterStore.getActiveCharacter()?.age ?? 1
+  return monumentStore.getMonumentIdForAge(age)
 })
 const improvementStore = useImprovementStore();
 const activityStore = useActivityStore();

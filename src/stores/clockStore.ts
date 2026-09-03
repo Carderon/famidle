@@ -101,7 +101,7 @@ export const useClockStore = defineStore('clock', () => {
   }
 
   const eventsSystem = createEventsSystem({
-    getEra: () => characterStore.getActiveCharacter()?.era ?? 0,
+    getAge: () => characterStore.getActiveCharacter()?.age ?? 0,
     addLog: (message, kind) => logStore.addLog(message, kind),
     getFlag: (flag) => gameStateStore.getFlag(flag),
     setFlag: (flag, value) => gameStateStore.setFlag(flag, value),
@@ -113,8 +113,8 @@ export const useClockStore = defineStore('clock', () => {
     getGaugeQuantity: (slug) => gaugeStore.getGaugeQuantity(slug),
     spendGauge: (slug, qty) => gaugeStore.trySpendGauge(slug, qty),
     addGauge: (slug, amt) => gaugeStore.addGauge(slug, amt),
-    setEra: (era) => {
-      characterStore.setEra(era)
+    setAge: (age) => {
+      characterStore.setAge(age)
       activityStore.cancelActiveTimedAndRefund()
       activityStore.updateActivityVisibility()
     },

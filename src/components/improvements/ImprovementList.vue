@@ -5,8 +5,8 @@
     </h2>
 
     <section v-for="group in improvementGroups" :key="group.category" class="space-y-3"
-      :class="group.category === 'era' ? 'rounded-lg border border-amber-500/35 bg-amber-950/15 px-3 py-3 dark:border-amber-400/25 dark:bg-amber-950/25' : ''">
-      <h3 v-if="isFullHUDShown" class="text-[11px] font-semibold uppercase tracking-[0.15em]" :class="group.category === 'era'
+      :class="group.category === 'age' ? 'rounded-lg border border-amber-500/35 bg-amber-950/15 px-3 py-3 dark:border-amber-400/25 dark:bg-amber-950/25' : ''">
+      <h3 v-if="isFullHUDShown" class="text-[11px] font-semibold uppercase tracking-[0.15em]" :class="group.category === 'age'
         ? 'text-amber-700 dark:text-amber-300'
         : 'text-gray-500 dark:text-gray-400'
         ">
